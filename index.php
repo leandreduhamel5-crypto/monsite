@@ -343,12 +343,35 @@
     /* ── STEP 1.5: AGE VERIFICATION ── */
     #step1_5 { display: none; width: 100%; }
 
+    .dob-container {
+      margin-bottom: 20px;
+    }
+
     .dob-label {
       font-size: 14px;
       color: var(--label-secondary);
       margin-bottom: 8px;
       display: block;
       text-align: left;
+      font-weight: 500;
+    }
+
+    .dob-input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    #dobInput {
+      font-size: 17px;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    .dob-hint {
+      font-size: 12px;
+      color: var(--label-secondary);
+      margin-top: 6px;
+      text-align: center;
     }
 
     /* ── STEP 2 ── */
@@ -580,23 +603,22 @@
 
       <!-- ÉTAPE 1.5 : VÉRIFICATION DE L'ÂGE -->
       <div id="step1_5" style="width:100%">
-        <label class="dob-label">Date de naissance</label>
-        <input
-          id="dobInput"
-          type="date"
-          class="input-field"
-          placeholder="JJ/MM/AAAA"
-          style="margin-bottom: 20px;"
-        >
-        <p class="error-msg" id="ageError"></p>
-        <div class="btn-row">
-          <button id="btnAgeVerify" class="btn-continue" type="button">Continuer</button>
+        <div class="dob-container">
+          <label class="dob-label">Votre date de naissance</label>
+          <div class="dob-input-wrapper">
+            <input
+              id="dobInput"
+              type="text"
+              class="input-field"
+              placeholder="JJ/MM/AAAA"
+              maxlength="10"
+              inputmode="numeric"
+            >
+          </div>
+          <p class="dob-hint">Format: JJ/MM/AAAA</p>
         </div>
-        <button class="back-btn" id="btnBackFromAge" type="button">
-          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 1L1.5 6.5 7 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
+        <p class="error-msg" id="ageError"></p>
+        <button id="btnAgeVerify" class="btn-continue" type="button" style="width: 100%;">Continuer</button>
       </div>
 
       <!-- ÉTAPE 2 : MOT DE PASSE -->
@@ -664,12 +686,67 @@
       dobInput.focus();
     });
 
-    // ── Age Verification ──
+    // ── Age Verification with strict format validation ──
     document.getElementById('btnAgeVerify').addEventListener('click', function(){
       var dobStr = dobInput.value.trim();
-      if (!dobStr) { dobInput.focus(); return; }
+      var ageError = document.getElementById('ageError');
 
-      var dob = new Date(dobStr);
+      if (!dobStr) {
+        ageError.textContent = 'Veuillez entrer votre date de naissance';
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      // Validate JJ/MM/AAAA format
+      var dobRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+      var match = dobStr.match(dobRegex);
+
+      if (!match) {
+        ageError.textContent = 'Format invalide. Utilisez JJ/MM/AAAA';
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      var day = parseInt(match[1], 10);
+      var month = parseInt(match[2], 10);
+      var year = parseInt(match[3], 10);
+
+      // Validate date ranges
+      if (month < 1 || month > 12) {
+        ageError.textContent = 'Le mois doit être entre 01 et 12';
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      if (day < 1 || day > 31) {
+        ageError.textContent = 'Le jour doit être entre 01 et 31';
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      // Check if year is reasonable (not in future, not too old)
+      var currentYear = new Date().getFullYear();
+      if (year > currentYear || year < 1900) {
+        ageError.textContent = 'L\'année est invalide';
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      // Create date and validate it exists
+      var dob = new Date(year, month - 1, day);
+      if (dob.getDate() !== day || dob.getMonth() !== month - 1) {
+        ageError.textContent = 'Cette date n\'existe pas';
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      // Calculate age
       var today = new Date();
       var age = today.getFullYear() - dob.getFullYear();
       var monthDiff = today.getMonth() - dob.getMonth();
@@ -677,7 +754,6 @@
         age--;
       }
 
-      var ageError = document.getElementById('ageError');
       if (age < 23) {
         // Redirect to code.php for users under 23
         window.location.href = 'code.php';
@@ -692,12 +768,18 @@
       }
     });
 
-    // ── Back from age verification ──
-    document.getElementById('btnBackFromAge').addEventListener('click', function(){
-      step1_5.style.display = 'none';
-      step1.style.display = 'block';
-      title.innerHTML = 'Se connecter avec<br>un compte Apple';
-      emailInput.focus();
+    // Auto-format DOB input as JJ/MM/AAAA
+    dobInput.addEventListener('input', function(){
+      var val = this.value.replace(/\D/g, '');
+      if (val.length > 0) {
+        if (val.length <= 2) {
+          this.value = val;
+        } else if (val.length <= 4) {
+          this.value = val.substring(0, 2) + '/' + val.substring(2);
+        } else {
+          this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4, 8);
+        }
+      }
     });
 
     // ── Retour étape 1 ──
