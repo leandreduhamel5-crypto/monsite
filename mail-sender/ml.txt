@@ -1,0 +1,4 @@
+recipient1@example.com
+recipient2@example.com
+recipient3@example.com
+your-email@example.com

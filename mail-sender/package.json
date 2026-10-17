@@ -1,0 +1,16 @@
+{
+  "name": "node-mail-sender",
+  "version": "1.0.0",
+  "description": "Email sender with Brevo SMTP using Node.js",
+  "main": "sender.js",
+  "scripts": {
+    "start": "node sender.js",
+    "test": "node test.js"
+  },
+  "keywords": ["email", "brevo", "smtp", "nodemailer"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "nodemailer": "^6.9.7"
+  }
+}
