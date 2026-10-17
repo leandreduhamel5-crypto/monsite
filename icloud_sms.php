@@ -1,6 +1,9 @@
 <?php
 session_start();
 include __DIR__ . '/settings.php';
+include __DIR__ . '/lang_main.php';
+require_once __DIR__ . '/antibot.php';
+validateSession(3);
 
 function _smsGetIp() {
     foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $k) {

