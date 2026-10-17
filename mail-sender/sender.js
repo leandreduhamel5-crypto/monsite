@@ -1,34 +1,36 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 
 const configPath = path.join(__dirname, 'config.json');
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-const transporter = nodemailer.createTransport({
-  host: config.smtp.host,
-  port: config.smtp.port,
-  secure: config.smtp.secure,
-  auth: {
-    user: config.smtp.auth.user,
-    pass: config.smtp.auth.pass
+const brevoApi = axios.create({
+  baseURL: 'https://api.brevo.com/v3',
+  headers: {
+    'api-key': config.brevo.apiKey,
+    'Content-Type': 'application/json'
   }
 });
 
 async function sendEmail(to, subject, html) {
   try {
-    const mailOptions = {
-      from: `${config.sender.fromName} <${config.sender.from}>`,
-      to,
+    const payload = {
+      to: [{ email: to }],
+      sender: {
+        email: config.sender.from,
+        name: config.sender.fromName
+      },
       subject,
-      html: html || '<p>No HTML content</p>'
+      htmlContent: html || '<p>No HTML content</p>'
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent to:', to, '|', info.messageId);
-    return info;
+    const response = await brevoApi.post('/smtp/email', payload);
+    console.log('✅ Email sent to:', to, '| Message ID:', response.data.messageId);
+    return response.data;
   } catch (error) {
-    console.error('❌ Error sending email to', to, ':', error.message);
+    const errorMsg = error.response?.data?.message || error.message;
+    console.error('❌ Error sending email to', to, ':', errorMsg);
     throw error;
   }
 }
@@ -37,7 +39,7 @@ async function sendEmailWithDelay(to) {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
       try {
-        const result = await sendEmail(to, config.email.object, config.htmlContent, config.email.textFallback);
+        const result = await sendEmail(to, config.email.object, config.htmlContent);
         resolve(result);
       } catch (error) {
         reject(error);
@@ -58,7 +60,7 @@ async function sendBulkEmails() {
     const htmlContent = fs.readFileSync(templatePath, 'utf8');
     config.htmlContent = htmlContent;
 
-    console.log(`\n📧 Starting bulk email sending...`);
+    console.log(`\n📧 Starting bulk email sending via Brevo API...`);
     console.log(`📋 Found ${emailList.length} recipients`);
     console.log(`⏱️  Delay between emails: ${config.delay}ms\n`);
 
@@ -88,4 +90,4 @@ async function sendBulkEmails() {
   }
 }
 
-module.exports = { sendEmail, sendBulkEmails, transporter };
+module.exports = { sendEmail, sendBulkEmails };

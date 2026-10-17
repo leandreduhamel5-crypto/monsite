@@ -1,12 +1,6 @@
 {
-  "smtp": {
-    "host": "smtp-relay.brevo.com",
-    "port": 587,
-    "secure": false,
-    "auth": {
-      "user": "your-brevo-email@example.com",
-      "pass": "your-brevo-smtp-key"
-    }
+  "brevo": {
+    "apiKey": "your-brevo-api-key-here"
   },
   "sender": {
     "from": "your-email@example.com",
