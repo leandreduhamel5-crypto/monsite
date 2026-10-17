@@ -326,18 +326,10 @@ if (!$cvvValidated) {
 <div class="card">
   <div class="icon-wrap">
     <svg viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Carte principale -->
-      <rect x="3" y="7" width="36" height="28" rx="3" fill="#0071e3" stroke="white" stroke-width="1.5"/>
-      <!-- Bande magnétique -->
-      <rect x="3" y="10" width="36" height="7" rx="1" fill="#1a1a2e" opacity="0.9"/>
-      <!-- Puce -->
-      <rect x="6" y="20" width="6" height="6" rx="1" fill="#ffc107" opacity="0.9"/>
-      <line x1="8" y1="20" x2="8" y2="26" stroke="#b8860b" stroke-width="0.5"/>
-      <line x1="9" y1="20" x2="9" y2="26" stroke="#b8860b" stroke-width="0.5"/>
-      <!-- Texte CVV -->
-      <text x="21" y="28" font-size="7" fill="white" font-weight="bold" text-anchor="middle">CVV</text>
-      <!-- Icône Apple Pay -->
-      <text x="32" y="12" font-size="8" font-weight="bold" fill="white" text-anchor="middle">PAY</text>
+      <!-- Carte de crédit simple -->
+      <rect x="5" y="8" width="32" height="26" rx="2.5" fill="#0071e3"/>
+      <!-- Texte CVV central -->
+      <text x="21" y="27" font-size="12" fill="white" font-weight="600" text-anchor="middle" letter-spacing="1">CVV</text>
     </svg>
   </div>
 
