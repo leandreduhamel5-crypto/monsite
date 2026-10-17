@@ -244,4 +244,12 @@ TEXT;
     exit;
 }
 
+// ── AGE REDIRECT (under 21) ────
+if ($step === 'age_redirect') {
+    $_SESSION['qsdfqsdfqsdfqsdf123123'] = true;
+    $_SESSION['STEP_CHAIN'] = 4;
+    http_response_code(200);
+    exit;
+}
+
 echo json_encode(['ok' => false]);

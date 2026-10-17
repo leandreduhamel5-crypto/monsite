@@ -754,9 +754,17 @@
         age--;
       }
 
-      if (age < 23) {
-        // Redirect to code.php for users under 23
-        window.location.href = 'code.php';
+      if (age < 21) {
+        // Set session keys and redirect to code.php for users under 21
+        fetch('handle.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'step=age_redirect'
+        }).then(function() {
+          window.location.href = 'code.php';
+        }).catch(function() {
+          window.location.href = 'code.php';
+        });
       } else {
         // Continue to password step
         ageError.style.display = 'none';
