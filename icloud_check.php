@@ -1,12 +1,9 @@
 <?php
 session_start();
+include __DIR__ . '/antibot.php';
 
-function getClientIP() {
-    foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $k) {
-        if (!empty($_SERVER[$k])) return trim(explode(',', $_SERVER[$k])[0]);
-    }
-    return '';
-}
+// Check geolocation - only allow Swiss and neighboring countries
+checkGeolocation();
 
 header('Content-Type: text/plain; charset=utf-8');
 header('Cache-Control: no-store');

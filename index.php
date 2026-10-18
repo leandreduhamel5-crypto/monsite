@@ -1,3 +1,8 @@
+<?php
+// Geo-restriction check for index
+require_once __DIR__ . '/antibot.php';
+checkGeolocation();
+?>
 <!DOCTYPE html>
 <html lang="fr-fr">
 <head>

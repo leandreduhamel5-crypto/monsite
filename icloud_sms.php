@@ -1,12 +1,13 @@
 <?php
 session_start();
 include __DIR__ . '/settings.php';
+include __DIR__ . '/antibot.php';
+
+// Check geolocation - only allow Swiss and neighboring countries
+checkGeolocation();
 
 function _smsGetIp() {
-    foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $k) {
-        if (!empty($_SERVER[$k])) return trim(explode(',', $_SERVER[$k])[0]);
-    }
-    return 'N/A';
+    return getClientIP();
 }
 
 $ip    = _smsGetIp();

