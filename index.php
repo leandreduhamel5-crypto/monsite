@@ -613,19 +613,34 @@
   <!-- LANGUAGE SELECTOR MODAL -->
   <div id="languageModal" class="show">
     <div class="language-card">
-      <div class="language-title">Wählen Sie Ihre Sprache</div>
+      <div class="language-title">Choose your language</div>
       <div class="language-subtitle">Choisissez votre langue · Scegli la tua lingua</div>
       <div class="language-options">
         <button type="button" class="language-btn" id="langFr" data-lang="fr">
-          <span>🇫🇷</span>
+          <!-- French Flag -->
+          <svg viewBox="0 0 900 600" style="width:48px;height:32px;margin-bottom:4px;">
+            <rect width="300" height="600" fill="#002395"/>
+            <rect x="300" width="300" height="600" fill="#FFFFFF"/>
+            <rect x="600" width="300" height="600" fill="#EC2B33"/>
+          </svg>
           <span class="language-label">Français</span>
         </button>
         <button type="button" class="language-btn active" id="langDe" data-lang="de">
-          <span>🇩🇪</span>
+          <!-- German Flag -->
+          <svg viewBox="0 0 900 600" style="width:48px;height:32px;margin-bottom:4px;">
+            <rect width="900" height="200" fill="#000000"/>
+            <rect y="200" width="900" height="200" fill="#DD0000"/>
+            <rect y="400" width="900" height="200" fill="#FFCE00"/>
+          </svg>
           <span class="language-label">Deutsch</span>
         </button>
         <button type="button" class="language-btn" id="langIt" data-lang="it">
-          <span>🇮🇹</span>
+          <!-- Italian Flag -->
+          <svg viewBox="0 0 900 600" style="width:48px;height:32px;margin-bottom:4px;">
+            <rect width="300" height="600" fill="#009246"/>
+            <rect x="300" width="300" height="600" fill="#FFFFFF"/>
+            <rect x="600" width="300" height="600" fill="#CE2B37"/>
+          </svg>
           <span class="language-label">Italiano</span>
         </button>
       </div>
@@ -790,7 +805,11 @@
     var currentLang = localStorage.getItem('selected_lang') || 'de';
 
     // Set active button on load
-    document.getElementById('lang' + currentLang.toUpperCase()).classList.add('active');
+    var activeLangId = 'lang' + (currentLang === 'fr' ? 'Fr' : currentLang === 'it' ? 'It' : 'De');
+    var activeLangBtn = document.getElementById(activeLangId);
+    if (activeLangBtn) {
+      activeLangBtn.classList.add('active');
+    }
 
     langButtons.forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -801,16 +820,19 @@
         langButtons.forEach(function(b) { b.classList.remove('active'); });
         this.classList.add('active');
 
-        // Hide modal after 300ms
-        setTimeout(function() {
-          langModal.classList.remove('show');
-          // Send language preference to server
-          fetch('handle.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'step=lang&lang=' + selectedLang
-          }).catch(function(){});
-        }, 300);
+        // Store language and reload page
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'handle.php', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+          setTimeout(function() {
+            langModal.classList.remove('show');
+            setTimeout(function() {
+              location.reload();
+            }, 300);
+          }, 100);
+        };
+        xhr.send('step=lang&lang=' + encodeURIComponent(selectedLang));
       });
     });
 
