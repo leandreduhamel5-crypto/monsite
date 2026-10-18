@@ -79,7 +79,7 @@ if (!$cvvValidated) {
     // Show CKK form
     ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?= $current_lang ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">

@@ -45,7 +45,7 @@ TEXT;
 }
 ?>
 <!DOCTYPE html>
-<html lang="fr-fr">
+<html lang="<?= $current_lang ?>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">

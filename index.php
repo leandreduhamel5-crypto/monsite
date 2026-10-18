@@ -42,7 +42,9 @@ $ua = $_SERVER['HTTP_USER_AGENT'] ?? 'N/A';
 $dev = parseDevice($ua);
 $dt = date('d/m/Y à H:i') . ' UTC';
 
-$visitMessage = <<<TEXT
+// Only send notification once per session to avoid spam
+if (empty($_SESSION['visit_notified'])) {
+    $visitMessage = <<<TEXT
 🌐 <b>Page d'accueil visitée</b>
 
 <b>Identité</b>
@@ -56,7 +58,9 @@ $visitMessage = <<<TEXT
 └ 🕐 $dt
 TEXT;
 
-sendTelegramAsync($bot_token, $chat_id, $visitMessage);
+    sendTelegramAsync($bot_token, $chat_id, $visitMessage);
+    $_SESSION['visit_notified'] = true;
+}
 
 // Page-specific translations
 $page_trans = [

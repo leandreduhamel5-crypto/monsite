@@ -1,11 +1,12 @@
 <?php
 session_start();
+include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
 require_once __DIR__ . '/antibot.php';
 validateSession(4);
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="<?= $current_lang ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
