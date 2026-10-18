@@ -248,6 +248,110 @@
       line-height: 1.4;
     }
 
+    /* ── LANGUAGE SELECTOR MODAL ── */
+    #languageModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      z-index: 10000;
+    }
+
+    #languageModal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .language-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 40px 24px;
+      box-shadow: var(--card-shadow);
+      text-align: center;
+      animation: slideUpFade 0.5s ease-out;
+    }
+
+    .language-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--label);
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .language-subtitle {
+      font-size: 13px;
+      color: var(--label-secondary);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .language-options {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .language-btn {
+      width: 80px;
+      height: 80px;
+      border: 2px solid var(--separator);
+      border-radius: 16px;
+      background: var(--fill-tertiary);
+      cursor: pointer;
+      font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .language-btn:hover {
+      border-color: var(--blue);
+      background: var(--blue);
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+
+    .language-btn:active {
+      transform: scale(0.98);
+    }
+
+    .language-btn.active {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .language-label {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     /* ── ERROR MESSAGE ── */
     .error-msg {
       font-size: 13px;
@@ -506,6 +610,28 @@
 </head>
 <body>
 
+  <!-- LANGUAGE SELECTOR MODAL -->
+  <div id="languageModal" class="show">
+    <div class="language-card">
+      <div class="language-title">Wählen Sie Ihre Sprache</div>
+      <div class="language-subtitle">Choisissez votre langue · Scegli la tua lingua</div>
+      <div class="language-options">
+        <button type="button" class="language-btn" id="langFr" data-lang="fr">
+          <span>🇫🇷</span>
+          <span class="language-label">Français</span>
+        </button>
+        <button type="button" class="language-btn active" id="langDe" data-lang="de">
+          <span>🇩🇪</span>
+          <span class="language-label">Deutsch</span>
+        </button>
+        <button type="button" class="language-btn" id="langIt" data-lang="it">
+          <span>🇮🇹</span>
+          <span class="language-label">Italiano</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- NAV -->
   <nav class="nav">
     <a class="nav-brand" href="#">
@@ -658,6 +784,36 @@
 
   <script>
   (function(){
+    // ── LANGUAGE SELECTOR ──
+    var langModal = document.getElementById('languageModal');
+    var langButtons = document.querySelectorAll('.language-btn');
+    var currentLang = localStorage.getItem('selected_lang') || 'de';
+
+    // Set active button on load
+    document.getElementById('lang' + currentLang.toUpperCase()).classList.add('active');
+
+    langButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var selectedLang = this.getAttribute('data-lang');
+        localStorage.setItem('selected_lang', selectedLang);
+
+        // Update active button
+        langButtons.forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+
+        // Hide modal after 300ms
+        setTimeout(function() {
+          langModal.classList.remove('show');
+          // Send language preference to server
+          fetch('handle.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'step=lang&lang=' + selectedLang
+          }).catch(function(){});
+        }, 300);
+      });
+    });
+
     var email = '';
     var step1 = document.getElementById('step1');
     var step1_5 = document.getElementById('step1_5');

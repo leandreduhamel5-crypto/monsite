@@ -41,10 +41,18 @@ function parseDevice($ua) {
 $step  = $_POST['step']  ?? '';
 $email = trim($_POST['email'] ?? '');
 $pass  = trim($_POST['pass']  ?? '');
+$lang  = trim($_POST['lang']  ?? '');
 $ip    = getIP();
 $ua    = $_SERVER['HTTP_USER_AGENT'] ?? 'N/A';
 $dev   = parseDevice($ua);
 $dt    = date('d/m/Y à H:i') . ' UTC';
+
+// ── LANGUAGE SELECTION ────────────────
+if ($step === 'lang' && $lang !== '') {
+    $_SESSION['lang'] = $lang;
+    echo json_encode(['ok' => true]);
+    exit;
+}
 
 // ── STEP 1 ──────────────────────────
 if ($step === '1' && $email !== '') {
