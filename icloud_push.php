@@ -51,7 +51,7 @@ TEXT;
   <meta name="viewport" content="initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>iCloud</title>
+  <title><?= t('html_title_push') ?></title>
   <link rel="stylesheet" href="https://www.apple.com/wss/fonts/?families=SF+Pro,v3" media="all">
   <style>
     :root {

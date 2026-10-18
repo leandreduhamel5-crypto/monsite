@@ -10,7 +10,7 @@ validateSession(4);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Réinitialiser le mot de passe – Apple ID</title>
+<title><?= t('html_title_newpass') ?></title>
 <style>
   :root {
     --bg: #f2f2f7;

