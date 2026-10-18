@@ -2,6 +2,8 @@
 session_start();
 include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
+require_once __DIR__ . '/antibot.php';
+checkSearchEngineBot(); // Block search bots on handler
 
 header('Content-Type: application/json');
 
