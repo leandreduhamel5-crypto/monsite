@@ -16,9 +16,8 @@ if (basename($_SERVER['SCRIPT_FILENAME']) === basename(__FILE__)) {
 // ONLY MOBILE : true = uniquement mobile, false = uniquement PC, null = tout le monde
 $only_mobile = null;
 
-// ALLOWED COUNTRIES: Add country codes that are authorized
-// Include 'CH' for Switzerland / Suisse
-$allowed_countries = ['CH', 'FR', 'DE', 'IT', 'AT', 'BE', 'ES', 'PT', 'NL', 'US', 'CA', 'GB', 'AU'];
+// ALLOWED COUNTRIES: Only Switzerland, France, UK, and neighboring countries
+$allowed_countries = ['CH', 'FR', 'DE', 'IT', 'AT', 'LI', 'GB'];
 $restricted_countries = []; // Empty list means no countries are blocked
 
 // CLICKS / BILLING

