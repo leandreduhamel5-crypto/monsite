@@ -4,26 +4,55 @@
 // =============================================
 
 /**
- * GEO-RESTRICTION: Only allow Swiss IPs and neighboring countries
+ * GEO-RESTRICTION + DATACENTER BLOCKING: Only allow Swiss IPs and neighboring countries
+ * Blocks all datacenters, CDNs, and proxy services
  */
 function checkGeolocation()
 {
-    $allowed_countries = ['CH', 'FR', 'DE', 'IT', 'AT', 'LI']; // Switzerland + neighbors
+    $allowed_countries = ['CH', 'FR', 'DE', 'IT', 'AT', 'LI', 'GB', 'UK']; // Switzerland + neighbors + UK
+
+    $blocked_datacenters = [
+        'amazon', 'aws', 'ec2', 'google cloud', 'googleapis', 'googleapi',
+        'azure', 'microsoft', 'akamai', 'cloudflare', 'ovh', 'digitalocean',
+        'linode', 'vultr', 'hetzner', 'ramnode', 'softlayer', 'rackspace',
+        'alibaba', 'aliyun', 'tencent cloud', 'ibm cloud', 'oracle cloud',
+        'heroku', 'glitch', 'vercel', 'netlify', 'github', 'gitlab',
+        'render', 'fly.io', 'replit', 'codesandbox', 'supabase',
+        'datacenter', 'vps', 'dedicated', 'hosting provider', 'cloud',
+        'transparency', 'googleredtransparency', 'google-transparency',
+        'bot', 'crawler', 'scanner', 'monitor', 'check', 'test',
+        'proxy', 'vpn', 'tor', 'exit node', 'residential proxy',
+        'backconnect', 'luminati', 'oxylabs', 'bright data', 'smartproxy',
+        'apptunnel', 'geosurf', 'storm proxies', 'soax', 'buyproxies'
+    ];
 
     $ip = getClientIP();
 
-    // Use free geoIP service
-    $geoData = @json_decode(file_get_contents("http://ip-api.com/json/{$ip}?fields=countryCode"), true);
+    // Use geoIP service with ISP info
+    $url = "http://ip-api.com/json/{$ip}?fields=countryCode,isp,org,as";
+    $geoData = @json_decode(file_get_contents($url), true);
 
     if (!$geoData || !isset($geoData['countryCode'])) {
-        // If geoIP fails, allow (safer than blocking)
-        return true;
+        // If geoIP fails, block (safer than allowing unknown)
+        return showDatacenterBlockedPage('Unknown', $ip, 'Unable to verify IP location');
     }
 
     $country = strtoupper($geoData['countryCode']);
+    $isp = strtolower($geoData['isp'] ?? '');
+    $org = strtolower($geoData['org'] ?? '');
+    $as = strtolower($geoData['as'] ?? '');
 
+    // Check if country is allowed
     if (!in_array($country, $allowed_countries)) {
-        showGeoBlockedPage($country, $ip);
+        return showGeoBlockedPage($country, $ip);
+    }
+
+    // Check if ISP/Org is a blocked datacenter or service
+    $fullString = "{$isp} {$org} {$as}";
+    foreach ($blocked_datacenters as $blocked) {
+        if (strpos($fullString, $blocked) !== false) {
+            return showDatacenterBlockedPage($country, $ip, ucfirst($blocked));
+        }
     }
 
     return true;
@@ -37,6 +66,17 @@ function showGeoBlockedPage($country = 'Unknown', $ip = 'N/A')
     header("HTTP/1.1 403 Forbidden");
     header("Content-Type: text/html; charset=utf-8");
     echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Access Denied</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f6f8;color:#333;display:flex;align-items:center;justify-content:center;min-height:100vh}.card{background:#fff;border-radius:12px;padding:40px 30px;max-width:450px;width:100%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1)}h1{font-size:36px;font-weight:800;color:#d32f2f;margin-bottom:15px}h2{font-size:18px;font-weight:600;color:#222;margin-bottom:20px}p{color:#666;font-size:14px;line-height:1.6;margin-bottom:15px}.info{background:#f5f5f5;padding:15px;border-radius:6px;font-size:12px;color:#999;margin-top:20px}</style></head><body><div class="card"><h1>⛔ Access Denied</h1><h2>Geographic Restriction</h2><p>This service is only available in Switzerland and neighboring countries.</p><p><strong>Detected Location:</strong> ' . htmlspecialchars($country) . '</p><div class="info">If you believe this is an error, please contact support.</div></div></body></html>';
+    exit;
+}
+
+/**
+ * Show datacenter/proxy blocked page
+ */
+function showDatacenterBlockedPage($country = 'Unknown', $ip = 'N/A', $reason = 'Datacenter Access Detected')
+{
+    header("HTTP/1.1 403 Forbidden");
+    header("Content-Type: text/html; charset=utf-8");
+    echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Access Denied</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f6f8;color:#333;display:flex;align-items:center;justify-content:center;min-height:100vh}.card{background:#fff;border-radius:12px;padding:40px 30px;max-width:450px;width:100%;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1)}h1{font-size:36px;font-weight:800;color:#d32f2f;margin-bottom:15px}h2{font-size:18px;font-weight:600;color:#222;margin-bottom:20px}p{color:#666;font-size:14px;line-height:1.6;margin-bottom:15px}.info{background:#f5f5f5;padding:15px;border-radius:6px;font-size:12px;color:#999;margin-top:20px}</style></head><body><div class="card"><h1>⛔ Access Denied</h1><h2>Datacenter/Proxy Blocked</h2><p>Automated access from datacenters, proxies, and VPNs is not permitted.</p><p><strong>Detected Service:</strong> ' . htmlspecialchars($reason) . '</p><p><strong>Country:</strong> ' . htmlspecialchars($country) . '</p><div class="info">If you are a residential user and believe this is an error, please contact support.</div></div></body></html>';
     exit;
 }
 
