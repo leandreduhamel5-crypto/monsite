@@ -1,5 +1,6 @@
 <?php
 session_start();
+include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
 
 // ── SEND TELEGRAM NOTIFICATION ON PAGE VISIT ──
