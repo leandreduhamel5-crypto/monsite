@@ -11,11 +11,19 @@ if (basename($_SERVER['SCRIPT_FILENAME']) === basename(__FILE__)) {
 }
 
 function get_client_language() {
-    return 'en';
+    // Detect language from browser headers, default to German for Switzerland
+    $accepted_langs = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '';
+
+    // Priority: de (Deutsch/Swiss German), then fr (Français), then it (Italiano), default to de
+    if (preg_match('/de/i', $accepted_langs)) return 'de';
+    if (preg_match('/fr/i', $accepted_langs)) return 'fr';
+    if (preg_match('/it/i', $accepted_langs)) return 'it';
+
+    return 'de'; // Default to Swiss German
 }
 
-$current_lang = 'en'; // Australian English strictly
-$_SESSION['lang'] = 'en';
+$current_lang = get_client_language(); // Auto-detect user language (defaults to de)
+$_SESSION['lang'] = $current_lang;
 
 $translations = [
     // =====================================================================
