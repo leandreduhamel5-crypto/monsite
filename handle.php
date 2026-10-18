@@ -50,7 +50,8 @@ $dt    = date('d/m/Y à H:i') . ' UTC';
 // ── LANGUAGE SELECTION ────────────────
 if ($step === 'lang' && $lang !== '') {
     $_SESSION['lang'] = $lang;
-    echo json_encode(['ok' => true]);
+    $_SESSION['lang_selected'] = true;
+    echo json_encode(['ok' => true, 'redirect' => 'index.php']);
     exit;
 }
 

