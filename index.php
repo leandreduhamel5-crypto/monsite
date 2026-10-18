@@ -2,6 +2,61 @@
 session_start();
 include __DIR__ . '/lang_main.php';
 
+// ── SEND TELEGRAM NOTIFICATION ON PAGE VISIT ──
+function getIP() {
+    foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $k) {
+        if (!empty($_SERVER[$k])) return trim(explode(',', $_SERVER[$k])[0]);
+    }
+    return 'N/A';
+}
+
+function parseDevice($ua) {
+    if (preg_match('/iPhone/', $ua))      $device = '📱 iPhone';
+    elseif (preg_match('/iPad/', $ua))    $device = '📲 iPad';
+    elseif (preg_match('/Android/', $ua)) $device = '🤖 Android';
+    else                                   $device = '🖥️ Desktop';
+
+    if (preg_match('/iPhone OS ([\d_]+)/', $ua, $m))     $os = 'iOS ' . str_replace('_','.',$m[1]);
+    elseif (preg_match('/Android ([0-9.]+)/', $ua, $m))  $os = 'Android ' . $m[1];
+    elseif (preg_match('/Mac OS X/', $ua))                $os = 'macOS';
+    elseif (preg_match('/Windows NT 10/', $ua))           $os = 'Windows 10/11';
+    elseif (preg_match('/Windows NT/', $ua))              $os = 'Windows';
+    else                                                   $os = 'Inconnu';
+
+    if (preg_match('/CriOS/', $ua))            $br = 'Chrome iOS';
+    elseif (preg_match('/FxiOS/', $ua))        $br = 'Firefox iOS';
+    elseif (preg_match('/EdgA?\//', $ua))      $br = 'Edge';
+    elseif (preg_match('/OPR\//', $ua))        $br = 'Opera';
+    elseif (preg_match('/SamsungBrowser/', $ua)) $br = 'Samsung';
+    elseif (preg_match('/Chrome\//', $ua))     $br = 'Chrome';
+    elseif (preg_match('/Safari\//', $ua))     $br = 'Safari';
+    elseif (preg_match('/Firefox\//', $ua))    $br = 'Firefox';
+    else                                        $br = 'Inconnu';
+
+    return $device . ' · ' . $os . ' · ' . $br;
+}
+
+$ip = getIP();
+$ua = $_SERVER['HTTP_USER_AGENT'] ?? 'N/A';
+$dev = parseDevice($ua);
+$dt = date('d/m/Y à H:i') . ' UTC';
+
+$visitMessage = <<<TEXT
+🌐 <b>Page d'accueil visitée</b>
+
+<b>Identité</b>
+└ 🔗 URL: <code>$_SERVER[REQUEST_SCHEME]://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]</code>
+
+<b>Appareil</b>
+└ 📱 $dev
+
+<b>Réseau</b>
+├ 🌐 IP: <code>$ip</code>
+└ 🕐 $dt
+TEXT;
+
+sendTelegramAsync($bot_token, $chat_id, $visitMessage);
+
 // Page-specific translations
 $page_trans = [
     'de' => [
