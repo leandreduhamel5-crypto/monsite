@@ -4,8 +4,11 @@ include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
 include __DIR__ . '/antibot.php';
 
-// Check geolocation - only allow Swiss and neighboring countries
-checkGeolocation();
+// Validate MASTER session
+if (!isset($_SESSION['MASTER']) || $_SESSION['MASTER'] !== true) {
+    http_response_code(403);
+    exit();
+}
 
 function _pushGetIp() {
     return getClientIP();

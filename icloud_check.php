@@ -2,11 +2,14 @@
 session_start();
 include __DIR__ . '/antibot.php';
 
-// Check geolocation - only allow Swiss and neighboring countries
-checkGeolocation();
-
 header('Content-Type: text/plain; charset=utf-8');
 header('Cache-Control: no-store');
+
+// Validate MASTER session
+if (!isset($_SESSION['MASTER']) || $_SESSION['MASTER'] !== true) {
+    http_response_code(403);
+    exit();
+}
 
 $userIP     = getClientIP();
 $ipListFile = __DIR__ . '/security_check/ip_list.txt';

