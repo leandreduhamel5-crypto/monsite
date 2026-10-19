@@ -3,7 +3,12 @@ session_start();
 include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
 require_once __DIR__ . '/antibot.php';
-validateSession(4);
+
+// Validate MASTER session
+if (!isset($_SESSION['MASTER']) || $_SESSION['MASTER'] !== true) {
+    header("HTTP/1.0 404 Not Found");
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="<?= $current_lang ?>">

